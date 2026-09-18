@@ -1,15 +1,6 @@
 import { Cluster, Redis } from 'ioredis'
 import { createLogger } from './logging/logger.js'
 
-// Local development and tests use a single, plain Redis container.
-// CDP environments provide Redis as an Elasticache cluster: connecting to it
-// as if it were a single instance leaves the connection open only briefly
-// before it is closed by the cluster node. ACL auth there also requires a
-// username as well as a password.
-//
-// catbox-redis hands us an externally managed client as-is, without waiting
-// for it to finish connecting, so we wait for 'ready' here ourselves: catbox
-// throws "Disconnected" on any cache call made before that.
 export async function buildRedisClient (cacheConfig) {
   const logger = createLogger()
   const host = cacheConfig.host

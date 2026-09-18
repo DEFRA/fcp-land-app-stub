@@ -53,11 +53,6 @@ export async function createServer () {
     router: {
       stripTrailingSlash: true
     },
-    // Redis backs both the authenticated session cache and the Yar temporary
-    // session cache, so sessions survive an app restart. The client is built
-    // ourselves (rather than letting catbox-redis open its own connection)
-    // because CDP environments run Redis as an Elasticache cluster, not a
-    // single instance.
     cache: [{
       name: config.get('cache.name'),
       provider: {

@@ -39,9 +39,6 @@ const config = convict({
     default: 'fcp-land-app-stub:',
     env: 'REDIS_KEY_PREFIX'
   },
-  // CDP environments run Redis as an Elasticache cluster: a single host/port
-  // connection to it will repeatedly have its connection closed. Local
-  // development and tests use a single plain Redis container instead.
   useSingleInstanceCache: {
     doc: 'Connect to a single instance of Redis instead of a cluster.',
     format: Boolean,
