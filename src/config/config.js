@@ -7,6 +7,7 @@ import { cache } from './cache.js'
 convict.addFormats(convictFormatWithValidator)
 
 const isProduction = process.env.NODE_ENV === 'production'
+const isDevelopment = process.env.NODE_ENV === 'development'
 
 export const config = convict({
   serviceVersion: {
@@ -102,12 +103,12 @@ export const config = convict({
     watch: {
       doc: 'Reload templates when they are changed.',
       format: Boolean,
-      default: !isProduction
+      default: false
     },
     noCache: {
       doc: 'Use a cache and recompile templates each time',
       format: Boolean,
-      default: !isProduction
+      default: isDevelopment
     }
   },
   tracing: {
