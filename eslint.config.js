@@ -1,8 +1,28 @@
 import neostandard from 'neostandard'
 
-export default neostandard({
-  env: ['node', 'vitest'],
-  ignores: [...neostandard.resolveIgnoresFromGitignore()],
-  noJsx: true,
-  noStyle: true
-})
+export default [
+  ...neostandard({
+    ignores: ['.public/**']
+  }),
+  {
+    rules: {
+      curly: ['error', 'all']
+    }
+  },
+  {
+    files: ['test/**/*.js'],
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        vi: 'readonly'
+      }
+    }
+  }
+]

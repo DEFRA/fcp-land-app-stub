@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" class="has-navbar-fixed-top">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block pageTitle %}{{ serviceName }}{% endblock %}</title>
+    <link rel="icon" href="{{ assetPath }}/images/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ getAssetPath('stylesheets/application.css') }}">
+  </head>
+  <body>
+    <nav class="navbar is-fixed-top land-app-navbar" role="navigation" aria-label="main navigation">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item land-app-brand" href="{{ serviceUrl }}">
+            <img src="{{ assetPath }}/images/logo.svg" alt="" width="28" height="28">
+            <span class="ml-2">{{ serviceName }}</span>
+          </a>
+          <button class="navbar-burger" data-target="navbar-menu" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+          </button>
+        </div>
+
+        <div id="navbar-menu" class="navbar-menu">
+          <div class="navbar-end">
+            {% if auth.isAuthenticated %}
+              <a class="navbar-item" href="/home">Signed in as {{ auth.name }}</a>
+              <a class="navbar-item" href="/auth/organisation">Change organisation</a>
+              <div class="navbar-item">
+                <a class="button is-primary is-light" href="/auth/sign-out">Sign out</a>
+              </div>
+            {% else %}
+              <div class="navbar-item">
+                <a class="button is-primary" href="/auth/sign-in">Sign in with Defra account</a>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="land-app-stub-banner">
+      <div class="container">
+        <p class="is-size-7">
+          This is a <strong>stub</strong> of The Land App, built to demonstrate Defra Identity integration. It is not the real service.
+        </p>
+      </div>
+    </div>
+
+    <main class="section">
+      <div class="container">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container content is-size-7">
+        <p>
+          {{ serviceName }} stub: {{ serviceTagline }}.
+          Source code available on <a href="https://github.com/DEFRA/fcp-land-app-stub">GitHub</a>.
+        </p>
+      </div>
+    </footer>
+
+    <script type="module" src="{{ getAssetPath('application.js') }}" nonce="{{ nonce }}"></script>
+  </body>
+</html>

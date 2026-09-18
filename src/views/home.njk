@@ -1,0 +1,33 @@
+{% extends '_layout.njk' %}
+
+{% block pageTitle %}Your session - {{ serviceName }}{% endblock %}
+
+{% block content %}
+  <p class="is-size-6 has-text-grey">{{ auth.name }}</p>
+  <h1 class="title is-2">You have signed in</h1>
+  <p class="subtitle is-5">Organisation {{ auth.organisationId }}</p>
+
+  <div class="buttons">
+    <a class="button is-primary is-light" href="/auth/organisation">Change organisation</a>
+    <a class="button is-light" href="/auth/sign-out">Sign out</a>
+  </div>
+
+  <h2 class="title is-4 mt-6">Your session details</h2>
+  <p class="content">
+    Everything below came from the Defra Identity token or from the permissions lookup
+    that follows sign in. A real service would use these values rather than display them.
+  </p>
+
+  <div class="table-container">
+    <table class="table is-striped is-fullwidth session-details">
+      <tbody>
+        {% for key, value in auth %}
+          <tr>
+            <th scope="row">{{ key }}</th>
+            <td>{{ value }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

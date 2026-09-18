@@ -1,94 +1,85 @@
-version: '3.4'
+# Local development stack.
+#
+#   docker compose up -d                 # Redis + the Defra Identity stub only
+#   docker compose --profile app up      # the above plus this app in a container
+#
+# The app is gated behind `profiles: ["app"]` so `npm run services:up` starts the
+# dependencies while the app itself runs host-native with hot reload.
+#
+# fcp-defra-id-stub stands in for Defra Identity locally. When deployed, point
+# DEFRA_ID_WELL_KNOWN_URL at the real Defra Identity tenant instead and drop this
+# service entirely.
 services:
-  floci:
-    image: hectorvent/floci:latest-aws
+  fcp-land-app-stub:
+    profiles:
+      - app
+    build:
+      context: .
+      target: development
+    image: fcp-land-app-stub
+    container_name: fcp-land-app-stub
     ports:
-      - '4566:4566'
-    env_file:
-      - 'compose/aws.env'
-    environment:
-      FLOCI_DEFAULT_REGION: eu-west-2
+      - "3000:3000"
+      - "9000:9229"
     volumes:
-      - ./compose/floci/start.d:/etc/floci/init/start.d:ro
+      - ./src:/home/node/src
+      - ./package.json:/home/node/package.json
+      - ./vite.config.js:/home/node/vite.config.js
+    env_file:
+      - .env
+    environment:
+      REDIS_HOST: redis
+      DEFRA_ID_WELL_KNOWN_URL: http://fcp-defra-id-stub:3008/idphub/b2c/b2c_1a_cui_cpdev_signupsigninsfi/.well-known/openid-configuration
+    # The stub advertises its token and JWKS endpoints on host.docker.internal so
+    # that both host-native and containerised apps can reach them.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
-      - cdp-tenant
+      - fcp-land-app
+    depends_on:
+      redis:
+        condition: service_healthy
+      fcp-defra-id-stub:
+        condition: service_healthy
 
   redis:
-    image: redis:7.2.3-alpine3.18
+    image: redis
     ports:
-      - '6379:6379'
-    networks:
-      - cdp-tenant
-
-  mongodb:
-    image: mongo:7.0.28
-    networks:
-      - cdp-tenant
-    ports:
-      - '27017:27017'
+      - "6379:6379"
     volumes:
-      - ./compose/mongo:/docker-entrypoint-initdb.d:ro
-      - mongodb-data:/data
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.hello().ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-
-  ################################################################################
-
-  your-frontend:
-    build: ./
-    ports:
-      - '3000:3000'
-    links:
-      - 'floci:floci'
-      - 'redis:redis'
-    depends_on:
-      floci:
-        condition: service_healthy
-      redis:
-        condition: service_started
-    env_file:
-      - 'compose/aws.env'
-    environment:
-      PORT: 3000
-      NODE_ENV: production
-      REDIS_HOST: redis
-      LOG_FORMAT: pino-pretty
-      SESSION_COOKIE_SECURE: false
-      USE_SINGLE_INSTANCE_CACHE: true
-      REDIS_TLS: false
+      - redis_data:/data
+    command: redis-server --dir /data --save 5 1
     networks:
-      - cdp-tenant
+      - fcp-land-app
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
-  # your-backend:
-  #   image: defradigital/your-backend:${YOUR_BACKEND_VERSION:-latest}
-  #   ports:
-  #     - '3555:3555'
-  #   links:
-  #     - 'foci:floci'
-  #     - 'mongodb:mongodb'
-  #   depends_on:
-  #     floci:
-  #       condition: service_healthy
-  #     mongodb:
-  #       condition: service_started
-  #   env_file:
-  #     - 'compose/aws.env'
-  #   environment:
-  #     PORT: 3001
-  #     NODE_ENV: development
-  #     MONGO_URI: mongodb://mongodb:27017/
-  #   networks:
-  #     - cdp-tenant
-
-################################################################################
-
-volumes:
-  mongodb-data:
+  fcp-defra-id-stub:
+    image: defradigital/fcp-defra-id-stub
+    ports:
+      - "3008:3008"
+    environment:
+      PORT: 3008
+      AUTH_MODE: mock
+      AUTH_OVERRIDE_FILE: example.data.json
+    volumes:
+      - ./example.data.json:/data/example.data.json
+    networks:
+      - fcp-land-app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3008/health"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 3s
 
 networks:
-  cdp-tenant:
+  fcp-land-app:
+    name: fcp-land-app
     driver: bridge
+
+volumes:
+  redis_data:

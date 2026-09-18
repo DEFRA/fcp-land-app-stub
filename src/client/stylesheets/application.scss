@@ -1,7 +1,45 @@
-@use "govuk-frontend";
+@use "bulma/sass";
 
-@use "variables";
-@use "helpers";
-@use "core";
-@use "components";
-@use "partials";
+// Approximation of The Land App palette. Bulma 1.x derives every shade from the
+// hue/saturation/lightness custom properties, so overriding these three recolours
+// the whole component set.
+:root {
+  --bulma-primary-h: 140deg;
+  --bulma-primary-s: 60%;
+  --bulma-primary-l: 30%;
+  --bulma-primary-invert-l: 100%;
+  --bulma-link-h: 140deg;
+  --bulma-link-s: 60%;
+  --bulma-link-l: 30%;
+  --bulma-link-invert-l: 100%;
+  --bulma-scheme-h: 140;
+  --bulma-scheme-s: 8%;
+}
+
+.land-app-navbar {
+  border-bottom: 1px solid var(--bulma-border);
+}
+
+.land-app-brand {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.land-app-stub-banner {
+  background: var(--bulma-warning-95);
+  border-bottom: 1px solid var(--bulma-warning-70);
+  padding: 0.5rem 0;
+}
+
+.session-details {
+  table-layout: fixed;
+  width: 100%;
+
+  th {
+    width: 16rem;
+  }
+
+  td {
+    overflow-wrap: anywhere;
+  }
+}
