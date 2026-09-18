@@ -14,6 +14,7 @@ import { headers } from './plugins/headers.js'
 import { router } from './plugins/router.js'
 import { session } from './plugins/session.js'
 import { sso } from './plugins/sso.js'
+import { buildRedisClient } from './common/helpers/redis-client.js'
 import { catchAll } from './common/helpers/errors.js'
 import { pulse } from './common/helpers/pulse.js'
 import { requestLogger } from './common/helpers/logging/request-logger.js'
@@ -23,6 +24,8 @@ import { setupProxy } from './common/helpers/proxy/setup-proxy.js'
 
 export async function createServer () {
   setupProxy()
+
+  const redisClient = await buildRedisClient(config.get('cache'))
 
   const server = Hapi.server({
     host: config.get('host'),
@@ -51,16 +54,16 @@ export async function createServer () {
       stripTrailingSlash: true
     },
     // Redis backs both the authenticated session cache and the Yar temporary
-    // session cache, so sessions survive an app restart.
+    // session cache, so sessions survive an app restart. The client is built
+    // ourselves (rather than letting catbox-redis open its own connection)
+    // because CDP environments run Redis as an Elasticache cluster, not a
+    // single instance.
     cache: [{
       name: config.get('cache.name'),
       provider: {
         constructor: CatboxRedis,
         options: {
-          host: config.get('cache.host'),
-          port: config.get('cache.port'),
-          password: config.get('cache.password'),
-          tls: config.get('cache.tls')
+          client: redisClient
         }
       }
     }]

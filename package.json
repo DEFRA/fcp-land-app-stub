@@ -51,6 +51,7 @@
     "global-agent": "3.0.0",
     "hapi-pino": "13.0.0",
     "hapi-pulse": "4.0.0",
+    "ioredis": "5.11.1",
     "joi": "18.2.1",
     "nunjucks": "3.2.4",
     "pino": "10.3.1",
