@@ -1,0 +1,49 @@
+import { constants } from 'node:http2'
+
+const {
+  HTTP_STATUS_FORBIDDEN,
+  HTTP_STATUS_NOT_FOUND,
+  HTTP_STATUS_INTERNAL_SERVER_ERROR
+} = constants
+
+export function catchAll (request, h) {
+  const response = request.response
+
+  if (!response.isBoom) {
+    return h.continue
+  }
+
+  const statusCode = response.output.statusCode
+
+  let template = '500'
+
+  if (statusCode === HTTP_STATUS_FORBIDDEN) {
+    template = '403'
+  }
+
+  if (statusCode === HTTP_STATUS_NOT_FOUND) {
+    template = '404'
+  }
+
+  if (statusCode >= HTTP_STATUS_INTERNAL_SERVER_ERROR) {
+    request.log(['error'], {
+      statusCode,
+      message: response.message,
+      stack: response.data?.stack
+    })
+  }
+
+  const viewResponse = h.view(template).code(statusCode)
+
+  // Carry over the original headers (CSP nonce, security headers) but let the
+  // view set its own content type.
+  const originalHeaders = response.headers ?? response.output?.headers ?? {}
+  for (const [key, value] of Object.entries(originalHeaders)) {
+    if (key.toLowerCase() === 'content-type') {
+      continue
+    }
+    viewResponse.header(key, value)
+  }
+
+  return viewResponse
+}

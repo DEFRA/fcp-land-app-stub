@@ -1,12 +1,14 @@
 .DS_Store
 .npm/
-.vscode
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+.sonarlint/
 .idea
 .public
 node_modules
 npm-debug.log
 coverage
+.env
 .cache
 .envrc
-tsconfig.tsbuildinfo
-.env

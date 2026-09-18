@@ -1,0 +1,8 @@
+{% extends '_layout.njk' %}
+
+{% block pageTitle %}Not authorised - {{ serviceName }}{% endblock %}
+
+{% block content %}
+  <h1 class="title is-3">Sorry, you are not authorised to perform that action.</h1>
+  <p class="content">Please <a href="/auth/sign-in">sign in</a> with an appropriate account.</p>
+{% endblock %}

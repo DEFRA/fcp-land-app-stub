@@ -1,19 +1,12 @@
-import convict from 'convict'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
+import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
-
-const dirname = path.dirname(fileURLToPath(import.meta.url))
-
-const fourHoursMs = 14400000
-const oneWeekMs = 604800000
-
-const isProduction = process.env.NODE_ENV === 'production'
-const isTest = process.env.NODE_ENV === 'test'
-const isDevelopment = process.env.NODE_ENV === 'development'
+import { defraId } from './defra-id.js'
+import { cache } from './cache.js'
 
 convict.addFormats(convictFormatWithValidator)
+
+const isProduction = process.env.NODE_ENV === 'production'
 
 export const config = convict({
   serviceVersion: {
@@ -23,39 +16,33 @@ export const config = convict({
     default: null,
     env: 'SERVICE_VERSION'
   },
-  host: {
-    doc: 'The IP address to bind',
-    format: 'ipaddress',
-    default: '0.0.0.0',
-    env: 'HOST'
-  },
-  port: {
-    doc: 'The port to bind.',
-    format: 'port',
-    default: 3000,
-    env: 'PORT'
-  },
-  staticCacheTimeout: {
-    doc: 'Static cache timeout in milliseconds',
-    format: Number,
-    default: oneWeekMs,
-    env: 'STATIC_CACHE_TIMEOUT'
-  },
   serviceName: {
     doc: 'Applications Service Name',
     format: String,
-    default: 'fcp-land-app-stub'
+    default: 'Land App'
   },
   root: {
     doc: 'Project root',
     format: String,
-    default: path.resolve(dirname, '../..')
+    default: path.resolve(import.meta.dirname, '../..')
   },
   assetPath: {
     doc: 'Asset path',
     format: String,
     default: '/public',
     env: 'ASSET_PATH'
+  },
+  staticCacheTimeout: {
+    doc: 'Static cache timeout in milliseconds',
+    format: Number,
+    default: 1000 * 60 * 60 * 24 * 7,
+    env: 'STATIC_CACHE_TIMEOUT'
+  },
+  env: {
+    doc: 'The application environment.',
+    format: ['production', 'development', 'test'],
+    default: 'development',
+    env: 'NODE_ENV'
   },
   isProduction: {
     doc: 'If this application running in the production environment',
@@ -65,12 +52,24 @@ export const config = convict({
   isDevelopment: {
     doc: 'If this application running in the development environment',
     format: Boolean,
-    default: isDevelopment
+    default: process.env.NODE_ENV === 'development'
   },
   isTest: {
     doc: 'If this application running in the test environment',
     format: Boolean,
-    default: isTest
+    default: process.env.NODE_ENV === 'test'
+  },
+  host: {
+    doc: 'The host to bind.',
+    format: 'ipaddress',
+    default: '0.0.0.0',
+    env: 'HOST'
+  },
+  port: {
+    doc: 'The port to bind.',
+    format: 'port',
+    default: 3000,
+    env: 'PORT'
   },
   log: {
     enabled: {
@@ -86,7 +85,7 @@ export const config = convict({
       env: 'LOG_LEVEL'
     },
     format: {
-      doc: 'Format to output logs in.',
+      doc: 'Format to output logs in',
       format: ['ecs', 'pino-pretty'],
       default: isProduction ? 'ecs' : 'pino-pretty',
       env: 'LOG_FORMAT'
@@ -96,12 +95,31 @@ export const config = convict({
       format: Array,
       default: isProduction
         ? ['req.headers.authorization', 'req.headers.cookie', 'res.headers']
-        : [],
-      env: 'LOG_REDACT'
+        : ['req', 'res', 'responseTime']
+    }
+  },
+  nunjucks: {
+    watch: {
+      doc: 'Reload templates when they are changed.',
+      format: Boolean,
+      default: !isProduction
+    },
+    noCache: {
+      doc: 'Use a cache and recompile templates each time',
+      format: Boolean,
+      default: !isProduction
+    }
+  },
+  tracing: {
+    header: {
+      doc: 'CDP tracing header name',
+      format: String,
+      default: 'x-cdp-request-id',
+      env: 'TRACING_HEADER'
     }
   },
   httpProxy: {
-    doc: 'HTTP Proxy',
+    doc: 'HTTP Proxy URL',
     format: String,
     nullable: true,
     default: null,
@@ -113,108 +131,17 @@ export const config = convict({
     default: isProduction,
     env: 'ENABLE_SECURE_CONTEXT'
   },
-  session: {
-    cache: {
-      engine: {
-        doc: 'backend cache is written to',
-        format: ['redis', 'memory'],
-        default: isProduction ? 'redis' : 'memory',
-        env: 'SESSION_CACHE_ENGINE'
-      },
-      name: {
-        doc: 'server side session cache name',
-        format: String,
-        default: 'session',
-        env: 'SESSION_CACHE_NAME'
-      },
-      ttl: {
-        doc: 'server side session cache ttl',
-        format: Number,
-        default: fourHoursMs,
-        env: 'SESSION_CACHE_TTL'
-      }
-    },
-    cookie: {
-      ttl: {
-        doc: 'Session cookie ttl',
-        format: Number,
-        default: fourHoursMs,
-        env: 'SESSION_COOKIE_TTL'
-      },
-      password: {
-        doc: 'session cookie password',
-        format: String,
-        default: 'the-password-must-be-at-least-32-characters-long',
-        env: 'SESSION_COOKIE_PASSWORD',
-        sensitive: true
-      },
-      secure: {
-        doc: 'set secure flag on cookie',
-        format: Boolean,
-        default: isProduction,
-        env: 'SESSION_COOKIE_SECURE'
-      }
-    }
-  },
-  redis: {
-    host: {
-      doc: 'Redis cache host',
-      format: String,
-      default: '127.0.0.1',
-      env: 'REDIS_HOST'
-    },
-    username: {
-      doc: 'Redis cache username',
-      format: String,
-      default: '',
-      env: 'REDIS_USERNAME'
-    },
+  cookie: {
     password: {
-      doc: 'Redis cache password',
-      format: '*',
-      default: '',
+      doc: 'The session cookie password, must be at least 32 characters.',
+      format: String,
+      default: null,
       sensitive: true,
-      env: 'REDIS_PASSWORD'
-    },
-    keyPrefix: {
-      doc: 'Redis cache key prefix name used to isolate the cached results across multiple clients',
-      format: String,
-      default: 'fcp-land-app-stub:',
-      env: 'REDIS_KEY_PREFIX'
-    },
-    useSingleInstanceCache: {
-      doc: 'Connect to a single instance of redis instead of a cluster.',
-      format: Boolean,
-      default: !isProduction,
-      env: 'USE_SINGLE_INSTANCE_CACHE'
-    },
-    useTLS: {
-      doc: 'Connect to redis using TLS',
-      format: Boolean,
-      default: isProduction,
-      env: 'REDIS_TLS'
+      env: 'COOKIE_PASSWORD'
     }
   },
-  nunjucks: {
-    watch: {
-      doc: 'Reload templates when they are changed.',
-      format: Boolean,
-      default: isDevelopment
-    },
-    noCache: {
-      doc: 'Use a cache and recompile templates each time',
-      format: Boolean,
-      default: isDevelopment
-    }
-  },
-  tracing: {
-    header: {
-      doc: 'Which header to track',
-      format: String,
-      default: 'x-cdp-request-id',
-      env: 'TRACING_HEADER'
-    }
-  }
+  defraId: defraId.getProperties(),
+  cache: cache.getProperties()
 })
 
 config.validate({ allowed: 'strict' })

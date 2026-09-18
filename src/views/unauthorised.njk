@@ -1,0 +1,8 @@
+{% extends '_layout.njk' %}
+
+{% block pageTitle %}Unable to sign you in - {{ serviceName }}{% endblock %}
+
+{% block content %}
+  <h1 class="title is-3">Sorry, we are unable to sign you in.</h1>
+  <p class="content">Please <a href="/auth/sign-in">try again</a>.</p>
+{% endblock %}
