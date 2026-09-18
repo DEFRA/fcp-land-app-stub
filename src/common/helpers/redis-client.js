@@ -1,4 +1,5 @@
 import { Cluster, Redis } from 'ioredis'
+import { createLogger } from './logging/logger.js'
 
 // Local development and tests use a single, plain Redis container.
 // CDP environments provide Redis as an Elasticache cluster: connecting to it
@@ -10,6 +11,7 @@ import { Cluster, Redis } from 'ioredis'
 // for it to finish connecting, so we wait for 'ready' here ourselves: catbox
 // throws "Disconnected" on any cache call made before that.
 export async function buildRedisClient (cacheConfig) {
+  const logger = createLogger()
   const host = cacheConfig.host
   const port = cacheConfig.port
   const keyPrefix = cacheConfig.keyPrefix
@@ -37,6 +39,14 @@ export async function buildRedisClient (cacheConfig) {
         ...tls
       }
     })
+
+  client.on('connect', () => {
+    logger.info('Connected to Redis server')
+  })
+
+  client.on('error', (error) => {
+    logger.error(`Redis connection error ${error}`)
+  })
 
   if (client.status !== 'ready') {
     await new Promise((resolve, reject) => {
