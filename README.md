@@ -355,7 +355,11 @@ All configuration goes through Convict in [src/config](src/config). Never read
 | `NODE_ENV` | `development` | Node environment |
 | `REDIS_HOST` | `redis` | Redis host |
 | `REDIS_PORT` | `6379` | Redis port |
-| `REDIS_PASSWORD` | | Redis password (production) |
+| `REDIS_USERNAME` | | Redis ACL username (CDP environments) |
+| `REDIS_PASSWORD` | | Redis password (CDP environments) |
+| `REDIS_KEY_PREFIX` | `fcp-land-app-stub:` | Key prefix, isolates this service in a shared Redis |
+| `USE_SINGLE_INSTANCE_CACHE` | `true` outside production | `false` connects as a cluster, as CDP's Elasticache requires |
+| `REDIS_TLS` | `true` in production | Connect to Redis using TLS |
 | `REDIS_TTL` | `86400000` | Session lifetime in milliseconds |
 | `COOKIE_PASSWORD` | | Session cookie encryption key, at least 32 characters |
 | `DEFRA_ID_WELL_KNOWN_URL` | | OpenID Connect discovery endpoint |

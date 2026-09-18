@@ -1,5 +1,7 @@
 import convict from 'convict'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 const config = convict({
   name: {
     doc: 'The cache name.',
@@ -18,16 +20,36 @@ const config = convict({
     default: 6379,
     env: 'REDIS_PORT'
   },
+  username: {
+    doc: 'The Redis cache username. CDP Elasticache uses ACL based auth, which requires a username as well as a password.',
+    format: String,
+    default: '',
+    env: 'REDIS_USERNAME'
+  },
   password: {
     doc: 'The Redis cache password.',
-    format: String,
-    default: process.env.NODE_ENV === 'production' ? null : undefined,
+    format: '*',
+    default: '',
+    sensitive: true,
     env: 'REDIS_PASSWORD'
   },
-  tls: {
-    doc: 'True if the Redis cache is using TLS.',
-    format: Object,
-    default: process.env.NODE_ENV === 'production' ? {} : undefined
+  keyPrefix: {
+    doc: 'Redis key prefix, used to isolate this service in a shared Redis instance.',
+    format: String,
+    default: 'fcp-land-app-stub:',
+    env: 'REDIS_KEY_PREFIX'
+  },
+  useSingleInstanceCache: {
+    doc: 'Connect to a single instance of Redis instead of a cluster.',
+    format: Boolean,
+    default: !isProduction,
+    env: 'USE_SINGLE_INSTANCE_CACHE'
+  },
+  useTLS: {
+    doc: 'Connect to Redis using TLS.',
+    format: Boolean,
+    default: isProduction,
+    env: 'REDIS_TLS'
   },
   segment: {
     doc: 'The cache segment.',
