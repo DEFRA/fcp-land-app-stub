@@ -31,17 +31,21 @@ export const authRoutes = [{
     // verify token returned from Defra Identity against public key
     await verifyToken(token)
 
-    // Typically permissions for the selected organisation would be available in the `roles` property of the token
-    // However, when signing in with RPA credentials, the roles only include the role name and not the permissions
-    // Therefore, we need to make additional API calls to get the permissions from Siti Agri
-    // These calls are authenticated using the token returned from Defra Identity
-    const { role, scope } = await getPermissions(profile.crn, profile.organisationId, token)
+    // The token's roles claim gives us a role name (sbi, organisationName and role are
+    // already derived onto profile in the Bell profile mapper - see src/plugins/auth.js)
+    // but no permissions: for RPA/Siti Agri organisations the roles claim never carries
+    // more than the role name. The actual permission groups for this business and user
+    // are only available from the FCP third party external API, authenticated with the
+    // Defra Identity token we just verified.
+    const { scope, businessName } = await getPermissions(profile.sbi, profile.crn, token)
 
     // Store token and all useful data in the session cache
     await request.server.app.cache.set(profile.sessionId, {
       isAuthenticated: true,
       ...profile,
-      role,
+      // Prefer the business name from the external API (the authoritative RPA record)
+      // and fall back to the name embedded in the token if that call didn't succeed
+      businessName: businessName ?? profile.organisationName,
       scope,
       token,
       refreshToken

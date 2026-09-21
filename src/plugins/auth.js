@@ -1,6 +1,8 @@
 import Jwt from '@hapi/jwt'
 import { getOidcConfig } from '../auth/get-oidc-config.js'
 import { refreshTokens } from '../auth/refresh-tokens.js'
+import { getOrganisationFromRelationships } from '../auth/get-organisation-from-relationships.js'
+import { getRoleFromRoles } from '../auth/get-role-from-roles.js'
 import { getSafeRedirect } from '../utils/get-safe-redirect.js'
 import { config } from '../config/config.js'
 
@@ -39,13 +41,22 @@ function getBellOptions (oidcConfig) {
       profile: function (credentials, _params, _get) {
         const payload = Jwt.token.decode(credentials.token).decoded.payload
 
+        // The SBI and organisation name aren't separate claims: they're embedded in the
+        // relationship entry for the currently selected organisation, alongside the role
+        const { sbi, name: organisationName } = getOrganisationFromRelationships(payload.currentRelationshipId, payload.relationships ?? []) ?? {}
+
         // Map all JWT properties to the credentials object so it can be stored in the session
         // Add some additional properties to the profile object for convenience
         credentials.profile = {
           ...payload,
           crn: payload.contactId,
           name: `${payload.firstName} ${payload.lastName}`,
-          organisationId: payload.currentRelationshipId
+          organisationId: payload.currentRelationshipId,
+          sbi,
+          organisationName,
+          // The role name alone carries no permissions - see getPermissions for why the
+          // actual authorisation scope comes from the external API instead
+          role: getRoleFromRoles(payload.currentRelationshipId, payload.roles ?? [])
         }
       }
     },

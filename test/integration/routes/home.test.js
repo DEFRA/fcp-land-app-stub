@@ -11,9 +11,12 @@ const credentials = {
   sessionId: 'home-session-id',
   crn: '1234567890',
   organisationId: '1234567',
+  sbi: '107183280',
   name: 'Andrew Farmer',
-  role: 'Farmer',
-  scope: ['user', 'Full permission - business'],
+  organisationName: 'Farms Ltd',
+  businessName: 'Farms Ltd',
+  role: 'Agent',
+  scope: ['user', 'LAND_DETAILS:FULL_PERMISSION'],
   token: 'DEFRA-ID-JWT',
   refreshToken: 'DEFRA-ID-REFRESH-TOKEN'
 }
