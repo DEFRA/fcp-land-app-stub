@@ -9,7 +9,11 @@ const sharedEnv = {
   DEFRA_ID_SERVICE_ID: 'test-service-id',
   DEFRA_ID_POLICY: 'test-policy',
   DEFRA_ID_REDIRECT_URL: 'http://localhost:3000/auth/sign-in-oidc',
-  DEFRA_ID_SIGN_OUT_REDIRECT_URL: 'http://localhost:3000/auth/sign-out-oidc'
+  DEFRA_ID_SIGN_OUT_REDIRECT_URL: 'http://localhost:3000/auth/sign-out-oidc',
+  // Never resolved in tests: src/api/query.js is always mocked, so this just
+  // needs to satisfy config validation.
+  EXTERNAL_API_ENDPOINT: 'https://external-api.example.com/graphql',
+  COGNITO_ENABLED: 'false'
 }
 
 const coverageConfig = {

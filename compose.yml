@@ -30,8 +30,17 @@ services:
     environment:
       REDIS_HOST: redis
       DEFRA_ID_WELL_KNOWN_URL: http://fcp-defra-id-stub:3008/idphub/b2c/b2c_1a_cui_cpdev_signupsigninsfi/.well-known/openid-configuration
+      # fcp-tp-external-api runs in its own compose stack, not this one, so it's
+      # reached via the host rather than a service name on the fcp-land-app network.
+      EXTERNAL_API_ENDPOINT: ${EXTERNAL_API_ENDPOINT:-http://host.docker.internal:3001/graphql}
+      COGNITO_ENABLED: ${COGNITO_ENABLED:-false}
+      COGNITO_DOMAIN: ${COGNITO_DOMAIN:-}
+      COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-}
+      COGNITO_CLIENT_SECRET: ${COGNITO_CLIENT_SECRET:-}
+      COGNITO_SCOPE: ${COGNITO_SCOPE:-}
     # The stub advertises its token and JWKS endpoints on host.docker.internal so
-    # that both host-native and containerised apps can reach them.
+    # that both host-native and containerised apps can reach them. The same
+    # hostname also reaches fcp-tp-external-api's own compose stack.
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
