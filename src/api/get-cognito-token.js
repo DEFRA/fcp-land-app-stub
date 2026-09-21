@@ -6,7 +6,8 @@ const logger = createLogger()
 // Cached in memory for the lifetime of the process so calls don't hit Cognito on
 // every request. Refreshed a few minutes before the token actually expires to avoid
 // a request failing mid-flight because the token expired between check and use.
-const TOKEN_EXPIRY_BUFFER_MS = 5 * 60 * 1000
+const TOKEN_EXPIRY_BUFFER_MINUTES = 5
+const TOKEN_EXPIRY_BUFFER_MS = TOKEN_EXPIRY_BUFFER_MINUTES * 60 * 1000
 let cachedToken = null
 let tokenExpiry = null
 

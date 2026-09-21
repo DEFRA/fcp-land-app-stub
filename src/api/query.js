@@ -1,6 +1,9 @@
 import { getAccessToken, clearCachedToken } from './get-cognito-token.js'
 import { config } from '../config/config.js'
 
+const HTTP_STATUS_UNAUTHORIZED = 401
+const HTTP_STATUS_FORBIDDEN = 403
+
 // A single reusable GraphQL client for every call this app makes to the FCP third
 // party external API. Only a permissions query exists today, but read and write
 // queries added in future work all go through this same function.
@@ -36,7 +39,7 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
     signal: AbortSignal.timeout(config.get('externalApi.timeout'))
   })
 
-  if ((response.status === 401 || response.status === 403) && accessToken && retryOnAuthFailure) {
+  if ((response.status === HTTP_STATUS_UNAUTHORIZED || response.status === HTTP_STATUS_FORBIDDEN) && accessToken && retryOnAuthFailure) {
     // Covers the CDP client secret rotation window: if the cached token is rejected,
     // drop it and retry once with a freshly requested one
     clearCachedToken()

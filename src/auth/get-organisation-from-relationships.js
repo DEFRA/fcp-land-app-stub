@@ -15,6 +15,9 @@
  * @returns {{ sbi: string, name: string } | null} The matching organisation, or
  * null if none is found.
  */
+// A relationship entry always ends with organisationLoa:relationship:relationshipLoa
+const TRAILING_FIELD_COUNT = 3
+
 function getOrganisationFromRelationships (organisationId, relationships) {
   for (const relationship of relationships) {
     const parts = relationship.split(':')
@@ -24,7 +27,7 @@ function getOrganisationFromRelationships (organisationId, relationships) {
       // Organisation names can themselves contain a colon (eg "Acme: Holdings Ltd"),
       // so the name is taken from the middle of the entry by counting in from both
       // ends rather than reading a fixed index
-      const name = parts.slice(2, -3).join(':')
+      const name = parts.slice(2, -TRAILING_FIELD_COUNT).join(':')
       return { sbi, name }
     }
   }
