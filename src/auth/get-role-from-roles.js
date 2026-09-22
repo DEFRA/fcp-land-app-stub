@@ -1,3 +1,5 @@
+import { findClaimForOrganisation } from './find-claim-for-organisation.js'
+
 /**
  * Get the role name for the currently selected organisation from the token's roles
  * claim.
@@ -9,26 +11,11 @@
  * authorisation is driven entirely by the scope built from permission groups), so
  * this deliberately does not filter on status - doing so would silently turn a
  * valid display value into null.
- *
- * As with relationships, roles accumulate across organisation switches within a
- * sign-in session, so matching on organisationId is required.
- *
- * @param {string} organisationId - The currently selected organisation id (the
- * token's currentRelationshipId).
- * @param {Array<string>} roles - The token's roles claim.
- *
- * @returns {string | null} The matching role name, or null if none is found.
  */
 function getRoleFromRoles (organisationId, roles) {
-  for (const role of roles) {
-    const [orgId, roleName] = role.split(':')
+  const parts = findClaimForOrganisation(organisationId, roles)
 
-    if (organisationId === orgId) {
-      return roleName
-    }
-  }
-
-  return null
+  return parts ? parts[1] : null
 }
 
 export { getRoleFromRoles }
