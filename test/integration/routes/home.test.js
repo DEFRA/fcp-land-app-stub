@@ -14,7 +14,6 @@ const credentials = {
   sbi: '107183280',
   name: 'Andrew Farmer',
   organisationName: 'Farms Ltd',
-  businessName: 'Farms Ltd',
   role: 'Agent',
   scope: ['user', 'LAND_DETAILS:FULL_PERMISSION'],
   token: 'DEFRA-ID-JWT',

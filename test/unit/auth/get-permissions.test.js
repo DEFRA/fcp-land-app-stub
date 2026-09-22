@@ -16,7 +16,6 @@ const token = 'DEFRA-ID-JWT'
 
 const businessData = {
   business: {
-    info: { name: 'Farms Ltd' },
     customer: {
       permissionGroups: [
         { id: 'business_details', level: 'full_permission' },
@@ -47,33 +46,28 @@ describe('getPermissions', () => {
     expect(scope).toContain('user')
   })
 
-  test('should return the business name', async () => {
-    const { businessName } = await getPermissions(sbi, crn, token)
-    expect(businessName).toBe('Farms Ltd')
-  })
-
   test('should fall back to the default scope when business is null', async () => {
     mockQuery.mockResolvedValue({ business: null })
     const result = await getPermissions(sbi, crn, token)
-    expect(result).toEqual({ scope: ['user'], businessName: null })
+    expect(result).toEqual({ scope: ['user'] })
   })
 
   test('should fall back to the default scope when customer is null', async () => {
-    mockQuery.mockResolvedValue({ business: { info: { name: 'Farms Ltd' }, customer: null } })
+    mockQuery.mockResolvedValue({ business: { customer: null } })
     const result = await getPermissions(sbi, crn, token)
-    expect(result).toEqual({ scope: ['user'], businessName: null })
+    expect(result).toEqual({ scope: ['user'] })
   })
 
   test('should fall back to the default scope and log a warning when the query throws', async () => {
     mockQuery.mockRejectedValue(new Error('External API unreachable'))
     const result = await getPermissions(sbi, crn, token)
-    expect(result).toEqual({ scope: ['user'], businessName: null })
+    expect(result).toEqual({ scope: ['user'] })
     expect(mockLoggerWarn).toHaveBeenCalled()
   })
 
   test('should fall back to the default scope when the response fails schema validation', async () => {
     mockQuery.mockResolvedValue({ business: { customer: { permissionGroups: [{ id: 'land_details' }] } } })
     const result = await getPermissions(sbi, crn, token)
-    expect(result).toEqual({ scope: ['user'], businessName: null })
+    expect(result).toEqual({ scope: ['user'] })
   })
 })

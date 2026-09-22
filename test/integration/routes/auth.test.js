@@ -43,7 +43,6 @@ const credentials = {
 }
 
 const scope = ['user']
-const businessName = 'Farms Ltd (RPA record)'
 
 const signOutUrl = 'https://oidc.example.com/sign-out'
 
@@ -109,7 +108,7 @@ describe('auth routes', () => {
     beforeEach(() => {
       path = '/auth/sign-in-oidc'
       mockGetSafeRedirect.mockReturnValue('/home')
-      mockGetPermissions.mockResolvedValue({ scope, businessName })
+      mockGetPermissions.mockResolvedValue({ scope })
     })
 
     test('redirects to oidc sign in page if unauthenticated', async () => {
@@ -236,7 +235,7 @@ describe('auth routes', () => {
       expect(cache.scope).toEqual(scope)
     })
 
-    test('should prefer the business name from the external API over the token', async () => {
+    test('should trust the organisation name from the token', async () => {
       await server.inject({
         url: path,
         auth: {
@@ -245,21 +244,7 @@ describe('auth routes', () => {
         }
       })
       const cache = await server.app.cache.get(credentials.profile.sessionId)
-      expect(cache.businessName).toBe(businessName)
-    })
-
-    test('should fall back to the token organisation name if the external API has none', async () => {
-      mockGetPermissions.mockResolvedValueOnce({ scope, businessName: null })
-
-      await server.inject({
-        url: path,
-        auth: {
-          strategy: 'defra-id',
-          credentials
-        }
-      })
-      const cache = await server.app.cache.get(credentials.profile.sessionId)
-      expect(cache.businessName).toBe(credentials.profile.organisationName)
+      expect(cache.organisationName).toBe(credentials.profile.organisationName)
     })
 
     test('should set token and refresh token in session cache', async () => {

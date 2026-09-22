@@ -5,9 +5,6 @@ const permissionsQuery = `
 query Permissions($sbi: ID!, $crn: ID!) {
   business(sbi: $sbi) {
     sbi
-    info {
-      name
-    }
     customer(crn: $crn) {
       crn
       permissionGroups {

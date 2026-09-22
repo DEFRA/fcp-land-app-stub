@@ -37,15 +37,12 @@ export const authRoutes = [{
     // more than the role name. The actual permission groups for this business and user
     // are only available from the FCP third party external API, authenticated with the
     // Defra Identity token we just verified.
-    const { scope, businessName } = await getPermissions(profile.sbi, profile.crn, token)
+    const { scope } = await getPermissions(profile.sbi, profile.crn, token)
 
     // Store token and all useful data in the session cache
     await request.server.app.cache.set(profile.sessionId, {
       isAuthenticated: true,
       ...profile,
-      // Prefer the business name from the external API (the authoritative RPA record)
-      // and fall back to the name embedded in the token if that call didn't succeed
-      businessName: businessName ?? profile.organisationName,
       scope,
       token,
       refreshToken

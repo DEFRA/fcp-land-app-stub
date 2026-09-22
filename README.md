@@ -238,7 +238,7 @@ and maps the response's `permissionGroups` (`{ id, level }` pairs, for example
 expects:
 
 ```js
-{ scope: ['user', 'LAND_DETAILS:AMEND', ...], businessName: 'Farms Ltd' }
+{ scope: ['user', 'LAND_DETAILS:AMEND', ...] }
 ```
 
 `user` is always included, so any route that just requires sign in (like `/home`) can use
@@ -248,14 +248,13 @@ those in `src/constants/scope/land-details.js`.
 
 If the external API is unreachable, or the user has no relationship with the queried SBI
 (both are normal, expected responses, not exceptional ones), `getPermissions` logs a
-warning and falls back to `{ scope: ['user'], businessName: null }` rather than failing
-sign in. A user who can't be resolved a permission set still gets to see the parts of the
-service that only need proof of identity.
+warning and falls back to `{ scope: ['user'] }` rather than failing sign in. A user who
+can't be resolved a permission set still gets to see the parts of the service that only
+need proof of identity.
 
-`businessName` prefers the external API's answer (the authoritative RPA record) and falls
-back to the organisation name already read from the token (see
-[What the token already tells you](#what-the-token-already-tells-you)) if that call didn't
-succeed - see `src/routes/auth.js`.
+The business name shown on `/home` is the one already read from the token (see
+[What the token already tells you](#what-the-token-already-tells-you)) - it isn't
+re-fetched from the external API, since the token already has it.
 
 ### The session
 
