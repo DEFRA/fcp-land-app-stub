@@ -3,6 +3,8 @@ import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
 import { defraId } from './defra-id.js'
 import { cache } from './cache.js'
+import { externalApi } from './external-api.js'
+import { cognito } from './cognito.js'
 
 convict.addFormats(convictFormatWithValidator)
 
@@ -142,7 +144,9 @@ export const config = convict({
     }
   },
   defraId: defraId.getProperties(),
-  cache: cache.getProperties()
+  cache: cache.getProperties(),
+  externalApi: externalApi.getProperties(),
+  cognito: cognito.getProperties()
 })
 
 config.validate({ allowed: 'strict' })

@@ -35,13 +35,12 @@ export const authRoutes = [{
     // However, when signing in with RPA credentials, the roles only include the role name and not the permissions
     // Therefore, we need to make additional API calls to get the permissions from Siti Agri
     // These calls are authenticated using the token returned from Defra Identity
-    const { role, scope } = await getPermissions(profile.crn, profile.organisationId, token)
+    const { scope } = await getPermissions(profile.sbi, profile.crn, token)
 
     // Store token and all useful data in the session cache
     await request.server.app.cache.set(profile.sessionId, {
       isAuthenticated: true,
       ...profile,
-      role,
       scope,
       token,
       refreshToken

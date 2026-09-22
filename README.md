@@ -16,8 +16,22 @@ presentational: because this stub represents a third party, it uses
 > The source code, and in particular the comments in `src/auth/**` and
 > `src/plugins/auth.js`, are the documentation. Read them alongside this README.
 
+## A few terms used throughout
+
+- **CRN** (customer reference number) identifies the signed in person.
+- **SBI** (single business identifier) identifies a farming or land management
+  business registered with the Rural Payments Agency. A person can be linked to more
+  than one business, and switches between them by "changing organisation".
+- **Rural Payments** is the Defra service that holds those businesses and the
+  permissions a person has on each one. Defra Identity authenticates the person;
+  Rural Payments data is what tells a service which businesses they can act for and
+  what they're allowed to do there.
+- **CDP** (Core Delivery Platform) is the shared hosting platform every Defra service,
+  including the API this stub calls, runs on.
+
 ## Contents
 
+- [A few terms used throughout](#a-few-terms-used-throughout)
 - [What it does](#what-it-does)
 - [Running it locally](#running-it-locally)
 - [How the Defra Identity integration works](#how-the-defra-identity-integration-works)
@@ -25,6 +39,7 @@ presentational: because this stub represents a third party, it uses
   - [Two authentication strategies](#two-authentication-strategies)
   - [OpenID Connect discovery](#openid-connect-discovery)
   - [Verifying the token](#verifying-the-token)
+  - [What the token already tells you](#what-the-token-already-tells-you)
   - [Getting permissions](#getting-permissions)
   - [The session](#the-session)
   - [Refreshing tokens](#refreshing-tokens)
@@ -32,6 +47,12 @@ presentational: because this stub represents a third party, it uses
   - [Single sign on from another Defra service](#single-sign-on-from-another-defra-service)
   - [Signing out](#signing-out)
   - [Security notes](#security-notes)
+- [Calling the FCP third party external API](#calling-the-fcp-third-party-external-api)
+  - [The GraphQL client](#the-graphql-client)
+  - [Machine-to-machine authentication with Cognito](#machine-to-machine-authentication-with-cognito)
+  - [The two tokens](#the-two-tokens)
+  - [Running against the API locally](#running-against-the-api-locally)
+  - [CDP API gateway URLs](#cdp-api-gateway-urls)
 - [Integration checklist](#integration-checklist)
 - [Project structure](#project-structure)
 - [Testing](#testing)
@@ -92,6 +113,14 @@ so you can sign in as any customer reference number (CRN) in that file. When you
 point `DEFRA_ID_WELL_KNOWN_URL` at the real Defra Identity tenant and drop the stub from
 your compose file.
 
+> `example.data.json` here is aligned to the SBIs and CRNs that
+> [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) recognises in its
+> own local test data, so the sign in journey can demonstrate real permission groups end
+> to end. This requires a `fcp-defra-id-stub` release that includes the fix for reading
+> `AUTH_OVERRIDE_FILE` (older versions ignore it and always serve their own built-in
+> data) - if the business name or SBI in the app don't match this file, that's the
+> symptom.
+
 Useful scripts:
 
 | Script | Description |
@@ -106,6 +135,14 @@ Useful scripts:
 
 ## How the Defra Identity integration works
 
+Signing a user in happens in two phases. First, Defra Identity **authenticates** the
+person and this app verifies the token it issues. Second, this app **enriches the
+session** with data about that person and the business they are acting for: some of it
+(their name, SBI, business name and role) comes straight from the token, and the rest
+(their permissions) needs a separate call to the [FCP third party external
+API](#calling-the-fcp-third-party-external-api). The sections below walk through both
+phases in order.
+
 ### The sign in journey
 
 ```mermaid
@@ -113,6 +150,7 @@ sequenceDiagram
     participant U as User
     participant A as Land App stub
     participant D as Defra Identity
+    participant X as FCP third party external API
 
     U->>A: GET /
     U->>A: GET /auth/sign-in
@@ -124,7 +162,8 @@ sequenceDiagram
     D-->>A: access_token, refresh_token
     A->>D: GET JWKS endpoint
     A->>A: Verify RS256 signature
-    A->>A: Look up permissions (role and scope)
+    A->>X: GraphQL permissions query (x-forwarded-authorization)
+    X-->>A: permission groups, or an error
     A->>A: Store the session in Redis, set the session cookie
     A->>U: 302 to /home
 ```
@@ -172,30 +211,71 @@ The token payload carries the claims the service needs:
 | `currentRelationshipId` | The organisation (business) the user selected |
 | `sessionId` | Defra Identity's session identifier, reused as the local session key |
 | `firstName`, `lastName` | The user's name |
+| `relationships` | Every organisation the user is linked to, including the SBI and business name |
 | `roles` | Role names only, without permission detail |
 
 The Bell `profile` function in `src/plugins/auth.js` maps these onto friendlier names
 (`crn`, `organisationId`, `name`) while keeping every original claim.
 
+### What the token already tells you
+
+Not everything needs a network call. Two claims carry more than a single value per
+organisation, because a user can belong to more than one business and can switch between
+them within a sign in session:
+
+```
+relationships: ["<organisationId>:<sbi>:<organisationName>:<organisationLoa>:<relationship>:<relationshipLoa>", ...]
+roles:         ["<organisationId>:<roleName>:<enrolmentStatus>", ...]
+```
+
+Both arrays accumulate one entry per organisation the user has visited this session, so
+reading the wrong index would silently pick up a stale organisation. `src/auth/get-organisation-details.js`
+reads both, using a shared `find-claim-for-organisation.js` helper that matches on
+`currentRelationshipId` rather than taking the first entry, for that reason.
+
+A `relationships` entry's organisation name can itself contain a colon (for example
+`"Acme: Holdings Ltd"`), so the name is read positionally from the middle of the entry
+rather than by a fixed index.
+
+The third segment of a `roles` entry is a Defra Identity enrolment status
+(1 pending, 2 pending verification, 3 complete/approved, 4 complete/rejected,
+5 pending appeal, 6 removed, 7 locked). This stub treats the role name as informational
+only and does not filter on it: authorisation here is driven entirely by the `scope`
+built from permission groups (see below), not by role.
+
+SBI, organisation name and role are therefore derived from the token alone, with no API
+call, in the Bell `profile` function in `src/plugins/auth.js`.
+
 ### Getting permissions
 
 `roles` in the token contains role names but not the permission levels a service needs to
-make authorisation decisions. Real services call the Siti Agri APIs, authenticated with
-the Defra Identity token, to resolve them.
+make authorisation decisions (see [What the token already tells you](#what-the-token-already-tells-you)).
+Those come from the [FCP third party external API](#calling-the-fcp-third-party-external-api)
+instead, authenticated with the Defra Identity token that was just verified.
 
-`src/auth/get-permissions.js` mocks those calls and returns hard coded values so the stub
-runs without any Siti Agri access. The mocked responses match the real response shapes,
-and the comments record the endpoints, methods and headers, so replacing the mocks with
-real calls is a contained change.
-
-It returns:
+`src/auth/get-permissions.js` sends a GraphQL query for the signed in user's SBI and CRN
+and maps the response's `permissionGroups` (`{ id, level }` pairs, for example
+`{ id: 'LAND_DETAILS', level: 'AMEND' }`) into the flat array Hapi's scope authorisation
+expects:
 
 ```js
-{ role: 'Farmer', scope: ['user', 'Full permission - business'] }
+{ scope: ['user', 'LAND_DETAILS:AMEND', ...] }
 ```
 
-The `scope` array is what Hapi route-level `auth: { scope: [...] }` checks against, which
-is how `/home` is restricted.
+`user` is always included, so any route that just requires sign in (like `/home`) can use
+`auth: { scope: ['user'] }` regardless of what the external API returns. Everything else
+is `<permission group id>:<level>`, uppercased, ready to compare against constants like
+those in `src/constants/scope/land-details.js`.
+
+If the external API is unreachable, or the user has no relationship with the queried SBI
+(both are normal, expected responses, not exceptional ones), `getPermissions` logs a
+warning and falls back to `{ scope: ['user'] }` rather than failing sign in. A user who
+can't be resolved a permission set still gets to see the parts of the service that only
+need proof of identity.
+
+The business name shown on `/home` is the one already read from the token (see
+[What the token already tells you](#what-the-token-already-tells-you)) - it isn't
+re-fetched from the external API, since the token already has it.
 
 ### The session
 
@@ -261,6 +341,100 @@ next sign in attempt would silently reuse the old identity.
 | Back button after sign out | The `headers` plugin disables caching on every page except the landing page and assets |
 | XSS | Content Security Policy of `'self'` only, with a per-request nonce for the single inline script tag |
 
+## Calling the FCP third party external API
+
+[fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) is a GraphQL API that
+sits between third party services and Defra's internal Data Access Layer (DAL). It's how
+this stub gets permissions today, and where any future work reading or writing more
+business or customer data would go.
+
+### The GraphQL client
+
+`src/api/query.js` is a single, generic `query(document, variables, { userToken })`
+function. It isn't specific to permissions: `src/api/queries/permissions.js` is just the
+first query document that uses it. Adding a new query is adding a new document plus a
+call to `query()`, not a new HTTP client.
+
+The endpoint is set with `EXTERNAL_API_ENDPOINT` - there is no default, so a deployed
+environment can't accidentally be left pointing at `localhost`. `.env.example` sets it to
+`http://localhost:3001/graphql` for local development against a
+[fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) checkout. In a
+deployed environment it's the CDP API gateway URL for that service instead (see
+[CDP API gateway URLs](#cdp-api-gateway-urls)).
+
+### Machine-to-machine authentication with Cognito
+
+CDP (Defra's Core Delivery Platform, the shared hosting platform every Defra service runs
+on) fronts REST and GraphQL APIs with an API Gateway that can require an AWS Cognito
+access token, issued via the OAuth2 client credentials grant, in addition to whatever
+authentication the API itself performs.
+
+```mermaid
+sequenceDiagram
+    participant A as Land App stub
+    participant C as AWS Cognito
+    participant G as CDP API Gateway
+    participant E as fcp-tp-external-api
+
+    A->>C: POST /oauth2/token<br/>(Basic auth: client id/secret, grant_type=client_credentials)
+    C-->>A: access_token, expires_in
+    A->>G: POST /graphql<br/>Authorization: Bearer access_token<br/>x-forwarded-authorization: Defra Identity token
+    G->>E: forwarded request
+    E-->>A: GraphQL response
+```
+
+`src/api/get-cognito-token.js` requests and caches that token in memory, refreshing a few
+minutes before it actually expires so a request never fails mid-flight because the token
+expired between check and use. Concurrent callers that arrive while there is no valid
+cached token share a single in-flight request rather than each firing their own call to
+Cognito. If a cached token is rejected by the gateway (for example because the CDP
+platform team has rotated the client secret), `src/api/query.js` clears the cache and
+retries once with a freshly requested token.
+
+Set `COGNITO_ENABLED=false` (the default) to skip all of this: no Cognito call is made and
+no `Authorization` header is sent to the external API. This is what local development
+uses, since `fcp-tp-external-api` has no authentication of its own when run locally.
+
+### The two tokens
+
+Every request to the external API can carry two different tokens, doing two different
+jobs, and they are **not interchangeable**:
+
+| Header | Identifies | Format | Verified by |
+|---|---|---|---|
+| `Authorization` | This service, to the API gateway | `Bearer <cognito access token>` | AWS Cognito / API Gateway |
+| `x-forwarded-authorization` | The signed in user, to the DAL | The raw Defra Identity JWT, **no** `Bearer ` prefix | The DAL, against the Defra Identity JWKS |
+
+Getting the second one wrong is the easiest mistake to make when copying this pattern:
+the DAL reads `x-forwarded-authorization` verbatim and hands it straight to a JWT decoder,
+so a `Bearer ` prefix there causes a verification failure rather than being stripped.
+
+### Running against the API locally
+
+1. Start [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) on its
+   default port: `npm run services:up && npm run dev` in that repository.
+2. Leave `COGNITO_ENABLED=false` in this repository's `.env` - the external API has no
+   authentication of its own locally.
+3. Start this stub as normal (`npm run local`). Containerised runs reach the other stack
+   through `host.docker.internal`, which is already set up in `compose.yml`.
+
+### CDP API gateway URLs
+
+When the CDP platform team provisions an API for a service, they follow a predictable
+naming convention:
+
+| | Pattern | Example |
+|---|---|---|
+| API URL | `https://<service>.api.<environment>.cdp-int.defra.cloud` | `https://fcp-tp-external-api.api.ext-test.cdp-int.defra.cloud/graphql` |
+| Cognito token URL | `https://<service>-<suffix>.auth.eu-west-2.amazoncognito.com/oauth2/token` | one random suffix per environment, supplied by the platform team |
+
+The platform team issues the Cognito domain, client ID and client secret for each
+environment (contact them via Slack `#cdp-support`), and periodically rotates the client
+secret with an overlap window - see the retry behaviour described above. Throttling
+defaults to 25 requests/second (private APIs, lower environments) or 100 requests/second
+(public APIs, `ext-test`/`prod`); ask the platform team if a service needs different
+limits.
+
 ## Integration checklist
 
 What you need from Defra Identity onboarding, and where it goes:
@@ -295,19 +469,43 @@ Then:
 - [ ] Validate `state` on the sign out redirect.
 - [ ] Pass every user-supplied redirect through a safe redirect check.
 
+If you also want real permission data (not just sign in), you need one more value and,
+depending on your environment, three optional ones:
+
+| Value | Environment variable | Required? |
+|---|---|---|
+| FCP third party external API URL | `EXTERNAL_API_ENDPOINT` | Always |
+| Cognito domain | `COGNITO_DOMAIN` | Only if `COGNITO_ENABLED=true` |
+| Cognito client ID | `COGNITO_CLIENT_ID` | Only if `COGNITO_ENABLED=true` |
+| Cognito client secret | `COGNITO_CLIENT_SECRET` | Only if `COGNITO_ENABLED=true` |
+
+`COGNITO_ENABLED` defaults to `false`. Set it to `true`, and provide the three Cognito
+values above, once the CDP platform team has put the external API behind an
+authenticated gateway for your environment - see
+[CDP API gateway URLs](#cdp-api-gateway-urls).
+
 ## Project structure
 
 ```
 src/
   index.js                  Entry point
   server.js                 Hapi server, plugin registration, Redis cache
+  api/
+    query.js                 Reusable GraphQL client for the external API
+    get-cognito-token.js     Cognito client credentials token, cached in memory
+    queries/
+      permissions.js         The permissions GraphQL query document
   auth/
     get-oidc-config.js      OpenID Connect discovery
     verify-token.js         JWKS fetch and RS256 verification
-    get-permissions.js      Mocked Siti Agri role and privilege lookup
+    find-claim-for-organisation.js   Shared token claim lookup by organisation id
+    get-organisation-details.js   SBI, organisation name and role from the token
+    get-permissions.js      Permission groups from the external API
     refresh-tokens.js       Single use refresh token exchange
     get-sign-out-url.js     End session URL construction
     state.js                CSRF state for the sign out redirect
+  constants/scope/
+    land-details.js         LAND_DETAILS permission level scope constants
   plugins/
     auth.js                 Bell and Cookie strategies
     session.js              Yar temporary session data
@@ -370,6 +568,13 @@ All configuration goes through Convict in [src/config](src/config). Never read
 | `DEFRA_ID_REDIRECT_URL` | | Sign in redirect URI |
 | `DEFRA_ID_SIGN_OUT_REDIRECT_URL` | | Sign out redirect URI |
 | `DEFRA_ID_REFRESH_TOKENS` | `true` | Refresh expired access tokens automatically |
+| `EXTERNAL_API_ENDPOINT` | | The FCP third party external API GraphQL endpoint - required, no default |
+| `EXTERNAL_API_TIMEOUT` | `10000` | Request timeout in milliseconds |
+| `COGNITO_ENABLED` | `false` | Authenticate to the external API's CDP gateway with Cognito |
+| `COGNITO_DOMAIN` | | Cognito domain, eg `your-service-c63f2.auth.eu-west-2.amazoncognito.com` |
+| `COGNITO_CLIENT_ID` | | Cognito app client ID |
+| `COGNITO_CLIENT_SECRET` | | Cognito app client secret |
+| `COGNITO_SCOPE` | `fcp-tp-external-api-resource-srv/access` | OAuth2 scope to request, matching CDP's one-resource-server-per-API convention |
 | `HTTP_PROXY` | | Outbound proxy, set by the platform |
 | `ENABLE_SECURE_CONTEXT` | `true` in production | Load `TRUSTSTORE_` certificates |
 

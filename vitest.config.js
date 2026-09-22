@@ -9,7 +9,9 @@ const sharedEnv = {
   DEFRA_ID_SERVICE_ID: 'test-service-id',
   DEFRA_ID_POLICY: 'test-policy',
   DEFRA_ID_REDIRECT_URL: 'http://localhost:3000/auth/sign-in-oidc',
-  DEFRA_ID_SIGN_OUT_REDIRECT_URL: 'http://localhost:3000/auth/sign-out-oidc'
+  DEFRA_ID_SIGN_OUT_REDIRECT_URL: 'http://localhost:3000/auth/sign-out-oidc',
+  EXTERNAL_API_ENDPOINT: 'https://external-api.example.com/graphql',
+  COGNITO_ENABLED: 'false'
 }
 
 const coverageConfig = {
@@ -40,8 +42,6 @@ export default defineConfig({
           globals: true,
           clearMocks: true,
           environment: 'node',
-          // Unit tests mock Redis; the host satisfies config validation and the
-          // port is pinned so the integration Testcontainers port cannot leak in.
           env: { ...sharedEnv, REDIS_HOST: 'redis', REDIS_PORT: '6379' }
         }
       },
@@ -52,7 +52,6 @@ export default defineConfig({
           globals: true,
           clearMocks: true,
           environment: 'node',
-          // REDIS_HOST / REDIS_PORT are provided by the Testcontainers globalSetup.
           env: sharedEnv,
           globalSetup: ['./test/setup/global-redis.js']
         }

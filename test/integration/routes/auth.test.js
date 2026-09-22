@@ -33,13 +33,15 @@ const credentials = {
   profile: {
     sessionId: 'session-id',
     crn: '1234567890',
-    organisationId: '1234567'
+    organisationId: '1234567',
+    sbi: '107183280',
+    organisationName: 'Farms Ltd',
+    role: 'Agent'
   },
   token: 'DEFRA-ID-JWT',
   refreshToken: 'DEFRA-ID-REFRESH-TOKEN'
 }
 
-const role = 'Farmer'
 const scope = ['user']
 
 const signOutUrl = 'https://oidc.example.com/sign-out'
@@ -106,7 +108,7 @@ describe('auth routes', () => {
     beforeEach(() => {
       path = '/auth/sign-in-oidc'
       mockGetSafeRedirect.mockReturnValue('/home')
-      mockGetPermissions.mockResolvedValue({ role, scope })
+      mockGetPermissions.mockResolvedValue({ scope })
     })
 
     test('redirects to oidc sign in page if unauthenticated', async () => {
@@ -175,7 +177,7 @@ describe('auth routes', () => {
           credentials
         }
       })
-      expect(mockGetPermissions).toHaveBeenCalledWith(credentials.profile.crn, credentials.profile.organisationId, credentials.token)
+      expect(mockGetPermissions).toHaveBeenCalledWith(credentials.profile.sbi, credentials.profile.crn, credentials.token)
     })
 
     test('should return error page if unable to get permissions', async () => {
@@ -217,6 +219,8 @@ describe('auth routes', () => {
       const cache = await server.app.cache.get(credentials.profile.sessionId)
       expect(cache.crn).toBe(credentials.profile.crn)
       expect(cache.organisationId).toBe(credentials.profile.organisationId)
+      expect(cache.sbi).toBe(credentials.profile.sbi)
+      expect(cache.role).toBe(credentials.profile.role)
     })
 
     test('should set user permissions in session cache', async () => {
@@ -228,8 +232,19 @@ describe('auth routes', () => {
         }
       })
       const cache = await server.app.cache.get(credentials.profile.sessionId)
-      expect(cache.role).toBe(role)
       expect(cache.scope).toEqual(scope)
+    })
+
+    test('should trust the organisation name from the token', async () => {
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'defra-id',
+          credentials
+        }
+      })
+      const cache = await server.app.cache.get(credentials.profile.sessionId)
+      expect(cache.organisationName).toBe(credentials.profile.organisationName)
     })
 
     test('should set token and refresh token in session cache', async () => {

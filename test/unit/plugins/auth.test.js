@@ -73,7 +73,9 @@ describe('getBellOptions', () => {
         contactId: '1234567890',
         currentRelationshipId: '1234567',
         firstName: 'Andrew',
-        lastName: 'Farmer'
+        lastName: 'Farmer',
+        relationships: ['1234567:107183280:Farms Ltd:1:External:0'],
+        roles: ['1234567:Agent:3']
       }, { key: 'a-secret', algorithm: 'HS256' })
 
       const credentials = { token }
@@ -83,6 +85,25 @@ describe('getBellOptions', () => {
       expect(credentials.profile.organisationId).toBe('1234567')
       expect(credentials.profile.name).toBe('Andrew Farmer')
       expect(credentials.profile.firstName).toBe('Andrew')
+      expect(credentials.profile.sbi).toBe('107183280')
+      expect(credentials.profile.organisationName).toBe('Farms Ltd')
+      expect(credentials.profile.role).toBe('Agent')
+    })
+
+    test('should not throw when relationships and roles are missing', () => {
+      const token = Jwt.token.generate({
+        contactId: '1234567890',
+        currentRelationshipId: '1234567',
+        firstName: 'Andrew',
+        lastName: 'Farmer'
+      }, { key: 'a-secret', algorithm: 'HS256' })
+
+      const credentials = { token }
+      getBellOptions(mockOidcConfig).provider.profile(credentials)
+
+      expect(credentials.profile.sbi).toBeNull()
+      expect(credentials.profile.organisationName).toBeNull()
+      expect(credentials.profile.role).toBeNull()
     })
   })
 

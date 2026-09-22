@@ -30,7 +30,9 @@ GOV.UK Design System. It uses [Bulma](https://bulma.io/) instead.
 src/
   index.js               # Entry point
   server.js              # Hapi server setup, plugin registration, cache config
+  api/                   # GraphQL client and Cognito token helper for the external API
   auth/                  # Defra Identity helpers (OIDC discovery, tokens, state, permissions)
+  constants/scope/       # Permission level scope constants (eg LAND_DETAILS:AMEND)
   common/helpers/        # CDP plumbing (logging, tracing, pulse, secure context, proxy, errors)
   config/                # Convict schemas plus Nunjucks setup
   plugins/               # Hapi plugins (auth, session, sso, router, CSP, headers)
@@ -101,8 +103,12 @@ comments in `src/auth/**` and `src/plugins/auth.js`: they are the documentation.
   registration and provides the authorisation, token, JWKS and end session URLs.
 - **Token verification.** `verifyToken()` converts the JWK from the JWKS endpoint into a
   PEM and verifies the RS256 signature.
-- **Permissions.** `getPermissions()` returns a hard coded role and scope. Real services
-  would call the Siti Agri APIs. The mocked responses show the expected shapes.
+- **Enriching the session.** SBI, organisation name and role need no API call: they're
+  read straight from the token's `relationships`/`roles` claims by
+  `get-organisation-details.js`. Permissions do need
+  a call: `getPermissions()` queries the FCP third party external API
+  (`src/api/query.js`) and maps the response into a Hapi `scope` array. If that call
+  fails, it falls back to the minimum scope rather than blocking sign in.
 - **State.** `createState()` / `validateState()` guard the sign out redirect against CSRF.
 - **Refresh.** `refreshTokens()` is called from the cookie strategy's `validate()` when the
   access token has expired. Defra Identity refresh tokens are single use.
@@ -111,6 +117,9 @@ comments in `src/auth/**` and `src/plugins/auth.js`: they are the documentation.
   carries the cookie.
 - **SSO.** The `sso` plugin turns `?ssoOrgId=` into a change organisation round trip so a
   user arriving from another Defra service lands on the right business.
+- **Cognito.** `src/api/get-cognito-token.js` is the optional machine-to-machine
+  authentication layer in front of the external API, toggled by `COGNITO_ENABLED`
+  (default `false`, which is what local development uses).
 
 ## Common gotchas
 

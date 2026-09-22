@@ -1,97 +1,59 @@
+import Joi from 'joi'
+import { query } from '../api/query.js'
+import { permissionsQuery } from '../api/queries/permissions.js'
+import { createLogger } from '../common/helpers/logging/logger.js'
+
+const logger = createLogger()
+
 const DEFAULT_SCOPE = 'user'
 
-async function getPermissions (crn, organisationId, token) {
-  // Cannot be retrieved in a single call so need to make multiple calls to different APIs
-  // These calls are authenticated using the token returned from Defra Identity
-  // All APIs are accessible via a series of RESTful endpoints hosted in Crown Hosting
-  // For the purposes of this stub, we will simulate these calls using mock data
-  // 1. Get personId from RPS API
-  const personId = await getPersonId({ crn, token })
-  // 2. Get roles and privileges from Siti Agri API
-  const { role, privileges } = await getRolesAndPrivileges(personId, organisationId, { crn, token })
-  // 3. Map roles and privileges to scope
-  // An application specific permission is added to demonstrate how to add local, non-Siti Agri permissions
-  const scope = [DEFAULT_SCOPE, ...privileges]
-  // Hapi.js assumes permissions are added in a `scope` array
-  return { role, scope }
+// Validates the shape actually needed from the response, not the whole schema
+const permissionsResponseSchema = Joi.object({
+  business: Joi.object({
+    sbi: Joi.string(),
+    customer: Joi.object({
+      crn: Joi.string(),
+      permissionGroups: Joi.array().items(Joi.object({
+        id: Joi.string().required(),
+        level: Joi.string().required()
+      }))
+    }).allow(null)
+  }).allow(null)
+}).unknown(true)
+
+async function getPermissions (sbi, crn, token) {
+  try {
+    const data = await query(permissionsQuery, { sbi, crn }, { userToken: token })
+
+    return mapPermissions(data)
+  } catch (error) {
+    // The external API being unreachable, or the user having no relationship with this
+    // SBI/CRN, should not block sign in - it just means they see the minimum permission set
+    logger.warn({ error, sbi, crn }, 'Failed to get permissions from the external API, falling back to default scope')
+
+    return { scope: [DEFAULT_SCOPE] }
+  }
 }
 
-async function getPersonId (headers) {
-  // simulate call to RPS API
-  // Only id is needed for mapping roles, but other fields shown for context for what else is available
-  // Note that the path should always include person id 3337243, regardless of the actual person id
-  // This is a workaround for services outside of Crown Hosting where the person id is not known until this API call is made
-  // PATH: /person/3337243/summary
-  // METHOD: GET
-  // HEADERS:
-  //   crn: <headers.crn>
-  //   Authorization <headers.token>
+function mapPermissions (data) {
+  const { error, value } = permissionsResponseSchema.validate(data)
 
-  const mockResponse = {
-    _data: {
-      id: '123456',
-      customerReferenceNumber: '1234567890', // crn
-      title: 'Mr',
-      firstName: 'Andrew',
-      lastName: 'Farmer',
-      landline: '01234567890',
-      mobile: '01234567890',
-      email: 'a.farmer@farms.com',
-      address: {
-        address1: 'Address line 1',
-        address2: 'Address line 2',
-        address3: 'Address line 3',
-        address4: 'Address line 4',
-        address5: 'Address line 5',
-        city: 'City',
-        county: 'County',
-        postcode: 'FA1 1RM',
-        country: 'UK'
-      },
-      doNotContact: false,
-      locked: false
-    }
+  if (error) {
+    throw new Error(`Unexpected permissions response shape: ${error.message}`)
   }
 
-  return mockResponse._data.id
-}
+  const permissionGroups = value.business?.customer?.permissionGroups
 
-async function getRolesAndPrivileges (personId, organisationId, headers) {
-  // simulate call to Siti Agri API
-  // returns all roles and privileges for the organisation so need to filter for the logged in user
-  // PATH: /SitiAgriApi/authorisation/organisation/<organisationId>/authorisation
-  // METHOD: GET
-  // HEADERS:
-  //   crn: <headers.crn>
-  //   Authorization <headers.token>
-
-  const mockResponse = {
-    data: {
-      personRoles: [{
-        personId: '123456',
-        role: 'Farmer'
-      }, {
-        personId: '654321',
-        role: 'Agent'
-      }],
-      personPrivileges: [{
-        personId: '123456',
-        privilegeNames: ['Full permission - business']
-      }, {
-        personId: '654321',
-        privilegeNames: ['Submit - bps']
-      }, {
-        personId: '654321',
-        privilegeNames: ['Submit - cs agree']
-      }]
-    }
+  if (!permissionGroups) {
+    // business is null for an unknown SBI, customer is null when the user has no
+    // relationship with this business - both are valid responses, not errors
+    return { scope: [DEFAULT_SCOPE] }
   }
+
+  const privileges = permissionGroups.map(({ id, level }) => `${id.toUpperCase()}:${level.toUpperCase()}`)
 
   return {
-    role: mockResponse.data.personRoles.find(role => role.personId === personId).role,
-    privileges: mockResponse.data.personPrivileges
-      .filter(privilege => privilege.personId === personId)
-      .map(privilege => privilege.privilegeNames[0])
+    scope: [DEFAULT_SCOPE, ...privileges]
   }
 }
 
