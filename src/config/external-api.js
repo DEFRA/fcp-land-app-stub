@@ -4,7 +4,7 @@ const config = convict({
   endpoint: {
     doc: 'The FCP third party external API GraphQL endpoint.',
     format: String,
-    default: 'http://localhost:3001/graphql',
+    default: null,
     env: 'EXTERNAL_API_ENDPOINT'
   },
   timeout: {
