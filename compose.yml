@@ -38,9 +38,10 @@ services:
       COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-}
       COGNITO_CLIENT_SECRET: ${COGNITO_CLIENT_SECRET:-}
       COGNITO_SCOPE: ${COGNITO_SCOPE:-}
-    # The stub advertises its token and JWKS endpoints on host.docker.internal so
-    # that both host-native and containerised apps can reach them. The same
-    # hostname also reaches fcp-tp-external-api's own compose stack.
+    # host.docker.internal reaches fcp-tp-external-api's own compose stack from
+    # inside this container. It does NOT reach fcp-defra-id-stub's token/JWKS
+    # endpoints here (see the WELL_KNOWN_API_HOST_OVERRIDE comment below) - that
+    # only matters if you run this service itself via `--profile app`.
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -74,6 +75,14 @@ services:
       PORT: 3008
       AUTH_MODE: mock
       AUTH_OVERRIDE_FILE: example.data.json
+      # By default the stub advertises its token/JWKS endpoints on
+      # host.docker.internal, assuming every caller is itself a container. The
+      # default local dev flow runs this app host-native (`npm run dev`), which
+      # cannot rely on host.docker.internal resolving back to a Docker-published
+      # port - only containers get that mapping (via extra_hosts, below).
+      # Override back to http://fcp-defra-id-stub:3008 if you run this app with
+      # `docker compose --profile app up` instead.
+      WELL_KNOWN_API_HOST_OVERRIDE: ${WELL_KNOWN_API_HOST_OVERRIDE:-http://localhost:3008}
     volumes:
       - ./example.data.json:/data/example.data.json
     networks:
