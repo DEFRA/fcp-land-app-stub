@@ -6,15 +6,7 @@ import { findClaimForOrganisation } from './find-claim-for-organisation.js'
  *
  * Each entry is in the format
  * "organisationId:sbi:organisationName:organisationLoa:relationship:relationshipLoa".
- *
- * @param {string} organisationId - The currently selected organisation id (the
- * token's currentRelationshipId).
- * @param {Array<string>} relationships - The token's relationships claim.
- *
- * @returns {{ sbi: string, name: string } | null} The matching organisation, or
- * null if none is found.
  */
-// A relationship entry always ends with organisationLoa:relationship:relationshipLoa
 const TRAILING_FIELD_COUNT = 3
 
 function getOrganisationFromRelationships (organisationId, relationships) {
@@ -28,9 +20,9 @@ function getOrganisationFromRelationships (organisationId, relationships) {
   // Organisation names can themselves contain a colon (eg "Acme: Holdings Ltd"),
   // so the name is taken from the middle of the entry by counting in from both
   // ends rather than reading a fixed index
-  const name = parts.slice(2, -TRAILING_FIELD_COUNT).join(':')
+  const organisationName = parts.slice(2, -TRAILING_FIELD_COUNT).join(':')
 
-  return { sbi, name }
+  return { sbi, organisationName }
 }
 
 export { getOrganisationFromRelationships }

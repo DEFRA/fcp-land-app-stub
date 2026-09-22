@@ -4,9 +4,6 @@ import { config } from '../config/config.js'
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_FORBIDDEN = 403
 
-// A single reusable GraphQL client for every call this app makes to the FCP third
-// party external API. Only a permissions query exists today, but read and write
-// queries added in future work all go through this same function.
 async function query (document, variables, { userToken } = {}) {
   return sendRequest(document, variables, userToken, true)
 }
@@ -34,8 +31,6 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
     method: 'POST',
     headers,
     body: JSON.stringify({ query: document, variables }),
-    // setupProxy() has already set a global undici dispatcher, so no proxy agent
-    // needs to be passed to fetch here
     signal: AbortSignal.timeout(config.get('externalApi.timeout'))
   })
 

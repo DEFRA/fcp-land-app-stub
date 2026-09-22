@@ -105,7 +105,7 @@ comments in `src/auth/**` and `src/plugins/auth.js`: they are the documentation.
   PEM and verifies the RS256 signature.
 - **Enriching the session.** SBI, organisation name and role need no API call: they're
   read straight from the token's `relationships`/`roles` claims by
-  `get-organisation-from-relationships.js` / `get-role-from-roles.js`. Permissions do need
+  `get-organisation-details.js`. Permissions do need
   a call: `getPermissions()` queries the FCP third party external API
   (`src/api/query.js`) and maps the response into a Hapi `scope` array. If that call
   fails, it falls back to the minimum scope rather than blocking sign in.

@@ -31,9 +31,10 @@ export const authRoutes = [{
     // verify token returned from Defra Identity against public key
     await verifyToken(token)
 
-    // sbi, organisationName and role were already derived from the token in the Bell
-    // profile mapper (see src/plugins/auth.js) - the token's roles claim is only ever
-    // a role name, never a permission, so permissions come from a separate API call
+    // Typically permissions for the selected organisation would be available in the `roles` property of the token
+    // However, when signing in with RPA credentials, the roles only include the role name and not the permissions
+    // Therefore, we need to make additional API calls to get the permissions from Siti Agri
+    // These calls are authenticated using the token returned from Defra Identity
     const { scope } = await getPermissions(profile.sbi, profile.crn, token)
 
     // Store token and all useful data in the session cache

@@ -229,9 +229,9 @@ roles:         ["<organisationId>:<roleName>:<enrolmentStatus>", ...]
 ```
 
 Both arrays accumulate one entry per organisation the user has visited this session, so
-reading the wrong index would silently pick up a stale organisation. `src/auth/get-organisation-from-relationships.js`
-and `src/auth/get-role-from-roles.js` share a `find-claim-for-organisation.js` helper that
-matches on `currentRelationshipId` rather than taking the first entry, for that reason.
+reading the wrong index would silently pick up a stale organisation. `src/auth/get-organisation-details.js`
+reads both, using a shared `find-claim-for-organisation.js` helper that matches on
+`currentRelationshipId` rather than taking the first entry, for that reason.
 
 A `relationships` entry's organisation name can itself contain a colon (for example
 `"Acme: Holdings Ltd"`), so the name is read positionally from the middle of the entry
@@ -499,8 +499,7 @@ src/
     get-oidc-config.js      OpenID Connect discovery
     verify-token.js         JWKS fetch and RS256 verification
     find-claim-for-organisation.js   Shared token claim lookup by organisation id
-    get-organisation-from-relationships.js   SBI and organisation name from the token
-    get-role-from-roles.js  Role name from the token
+    get-organisation-details.js   SBI, organisation name and role from the token
     get-permissions.js      Permission groups from the external API
     refresh-tokens.js       Single use refresh token exchange
     get-sign-out-url.js     End session URL construction

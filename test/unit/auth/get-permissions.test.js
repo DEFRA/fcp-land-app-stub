@@ -16,7 +16,9 @@ const token = 'DEFRA-ID-JWT'
 
 const businessData = {
   business: {
+    sbi,
     customer: {
+      crn,
       permissionGroups: [
         { id: 'business_details', level: 'full_permission' },
         { id: 'land_details', level: 'amend' }

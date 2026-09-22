@@ -10,7 +10,9 @@ const DEFAULT_SCOPE = 'user'
 // Validates the shape actually needed from the response, not the whole schema
 const permissionsResponseSchema = Joi.object({
   business: Joi.object({
+    sbi: Joi.string(),
     customer: Joi.object({
+      crn: Joi.string(),
       permissionGroups: Joi.array().items(Joi.object({
         id: Joi.string().required(),
         level: Joi.string().required()

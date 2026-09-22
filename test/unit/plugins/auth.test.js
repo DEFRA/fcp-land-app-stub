@@ -101,8 +101,8 @@ describe('getBellOptions', () => {
       const credentials = { token }
       getBellOptions(mockOidcConfig).provider.profile(credentials)
 
-      expect(credentials.profile.sbi).toBeUndefined()
-      expect(credentials.profile.organisationName).toBeUndefined()
+      expect(credentials.profile.sbi).toBeNull()
+      expect(credentials.profile.organisationName).toBeNull()
       expect(credentials.profile.role).toBeNull()
     })
   })

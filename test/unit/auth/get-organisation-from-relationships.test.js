@@ -4,7 +4,7 @@ describe('getOrganisationFromRelationships', () => {
   test('should return the sbi and name for the matching organisation', () => {
     const relationships = ['5900001:110100101:Farms Ltd:1:External:0']
     const result = getOrganisationFromRelationships('5900001', relationships)
-    expect(result).toEqual({ sbi: '110100101', name: 'Farms Ltd' })
+    expect(result).toEqual({ sbi: '110100101', organisationName: 'Farms Ltd' })
   })
 
   test('should pick the matching entry out of a cumulative multi-organisation array', () => {
@@ -13,13 +13,13 @@ describe('getOrganisationFromRelationships', () => {
       '5900002:110100102:Andrew Farmer:1:External:0'
     ]
     const result = getOrganisationFromRelationships('5900002', relationships)
-    expect(result).toEqual({ sbi: '110100102', name: 'Andrew Farmer' })
+    expect(result).toEqual({ sbi: '110100102', organisationName: 'Andrew Farmer' })
   })
 
   test('should keep a colon in the organisation name intact', () => {
     const relationships = ['5900001:110100101:Acme: Holdings Ltd:1:External:0']
     const result = getOrganisationFromRelationships('5900001', relationships)
-    expect(result).toEqual({ sbi: '110100101', name: 'Acme: Holdings Ltd' })
+    expect(result).toEqual({ sbi: '110100101', organisationName: 'Acme: Holdings Ltd' })
   })
 
   test('should return null when no entry matches the organisation id', () => {
