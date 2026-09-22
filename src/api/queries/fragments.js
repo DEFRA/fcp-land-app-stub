@@ -1,0 +1,19 @@
+export const addressFields = `
+  pafOrganisationName
+  buildingNumberRange
+  buildingName
+  flatName
+  street
+  city
+  county
+  postalCode
+  country
+  dependentLocality
+  doubleDependentLocality
+  line1
+  line2
+  line3
+  line4
+  line5
+  uprn
+`

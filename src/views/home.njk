@@ -1,33 +1,139 @@
 {% extends '_layout.njk' %}
 
-{% block pageTitle %}Your session - {{ serviceName }}{% endblock %}
+{% block pageTitle %}Your details - {{ serviceName }}{% endblock %}
+
+{% macro formatAddress(address) %}
+  {% if address %}
+    {% for line in [address.line1, address.line2, address.line3, address.line4, address.line5, address.postalCode] %}
+      {% if line %}{{ line }}<br>{% endif %}
+    {% endfor %}
+  {% else %}
+    <span class="has-text-grey">Not available</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro formatPhone(phone) %}
+  {% if phone %}
+    {% if phone.landline %}Telephone: {{ phone.landline }}<br>{% endif %}
+    {% if phone.mobile %}Mobile: {{ phone.mobile }}{% endif %}
+  {% else %}
+    <span class="has-text-grey">Not available</span>
+  {% endif %}
+{% endmacro %}
 
 {% block content %}
-  <p class="is-size-6 has-text-grey">{{ auth.name }}</p>
-  <h1 class="title is-2">You have signed in</h1>
-  <p class="subtitle is-5">Organisation {{ auth.organisationId }}</p>
+  <h1 class="title is-2">Welcome, {{ auth.name }}</h1>
+  <p class="subtitle is-5">Organisation {{ auth.organisationName }}</p>
 
-  <div class="buttons">
-    <a class="button is-primary is-light" href="/auth/organisation">Change organisation</a>
-    <a class="button is-light" href="/auth/sign-out">Sign out</a>
-  </div>
-
-  <h2 class="title is-4 mt-6">Your session details</h2>
   <p class="content">
-    Everything below came from the Defra Identity token or from the permissions lookup
-    that follows sign in. A real service would use these values rather than display them.
+    <a href="/session">View your raw session details</a>
   </p>
 
-  <div class="table-container">
-    <table class="table is-striped is-fullwidth session-details">
-      <tbody>
-        {% for key, value in auth %}
+  <h2 class="title is-4">Your personal details</h2>
+
+  {% if personalDetails %}
+    <div class="box">
+      <table class="table is-fullwidth">
+        <tbody>
           <tr>
-            <th scope="row">{{ key }}</th>
-            <td>{{ value }}</td>
+            <th>Full name</th>
+            <td>{{ personalDetails.name.first }} {% if personalDetails.name.middle %}{{ personalDetails.name.middle }} {% endif %}{{ personalDetails.name.last }}</td>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+          <tr>
+            <th>Date of birth</th>
+            <td>{{ personalDetails.dateOfBirth or 'Not available' }}</td>
+          </tr>
+          <tr>
+            <th>Customer reference number</th>
+            <td>{{ personalDetails.crn }}</td>
+          </tr>
+          <tr>
+            <th>Personal address</th>
+            <td>{{ formatAddress(personalDetails.address) }}</td>
+          </tr>
+          <tr>
+            <th>Personal phone numbers</th>
+            <td>{{ formatPhone(personalDetails.phone) }}</td>
+          </tr>
+          <tr>
+            <th>Personal email address</th>
+            <td>{{ personalDetails.email.address if personalDetails.email else 'Not available' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="notification is-warning">
+      Unable to load your personal details right now.
+    </div>
+  {% endif %}
+
+  <h2 class="title is-4 mt-6">Your business details</h2>
+
+  {% if not hasBusinessAccess %}
+    <div class="notification is-warning">
+      You do not have permission to view business details for this organisation.
+    </div>
+  {% elif businessDetails %}
+    <div class="box">
+      <table class="table is-fullwidth">
+        <tbody>
+          <tr>
+            <th>Business name</th>
+            <td>{{ businessDetails.name }}</td>
+          </tr>
+          <tr>
+            <th>Business address</th>
+            <td>{{ formatAddress(businessDetails.address) }}</td>
+          </tr>
+          <tr>
+            <th>Business phone numbers</th>
+            <td>{{ formatPhone(businessDetails.phone) }}</td>
+          </tr>
+          <tr>
+            <th>Business email address</th>
+            <td>{{ businessDetails.email.address if businessDetails.email else 'Not available' }}</td>
+          </tr>
+          <tr>
+            <th>Single business identifier (SBI)</th>
+            <td>{{ businessDetails.sbi }}</td>
+          </tr>
+          <tr>
+            <th>VAT registration number</th>
+            <td>{{ businessDetails.vat or 'Not available' }}</td>
+          </tr>
+          <tr>
+            <th>Trader number</th>
+            <td>{{ businessDetails.traderNumber or 'Not available' }}</td>
+          </tr>
+          <tr>
+            <th>Vendor registration number</th>
+            <td>{{ businessDetails.vendorNumber or 'Not available' }}</td>
+          </tr>
+          <tr>
+            <th>County Parish Holding numbers</th>
+            <td>
+              {% if businessDetails.countyParishHoldings and businessDetails.countyParishHoldings.length %}
+                {% for holding in businessDetails.countyParishHoldings %}{{ holding.cphNumber }}{% if not loop.last %}, {% endif %}{% endfor %}
+              {% else %}
+                <span class="has-text-grey">Not available</span>
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th>Business legal status</th>
+            <td>{{ businessDetails.legalStatus.type if businessDetails.legalStatus else 'Not available' }}</td>
+          </tr>
+          <tr>
+            <th>Business type</th>
+            <td>{{ businessDetails.type.type if businessDetails.type else 'Not available' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="notification is-warning">
+      Unable to load your business details right now.
+    </div>
+  {% endif %}
 {% endblock %}
