@@ -574,7 +574,7 @@ All configuration goes through Convict in [src/config](src/config). Never read
 | `COGNITO_DOMAIN` | | Cognito domain, eg `your-service-c63f2.auth.eu-west-2.amazoncognito.com` |
 | `COGNITO_CLIENT_ID` | | Cognito app client ID |
 | `COGNITO_CLIENT_SECRET` | | Cognito app client secret |
-| `COGNITO_SCOPE` | | OAuth2 scope to request, eg `land-app-resource-srv/access`. Omitted from the token request when unset |
+| `COGNITO_SCOPE` | `fcp-tp-external-api-resource-srv/access` | OAuth2 scope to request, matching CDP's one-resource-server-per-API convention |
 | `HTTP_PROXY` | | Outbound proxy, set by the platform |
 | `ENABLE_SECURE_CONTEXT` | `true` in production | Load `TRUSTSTORE_` certificates |
 

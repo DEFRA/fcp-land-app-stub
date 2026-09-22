@@ -30,10 +30,10 @@ const config = convict({
     env: 'COGNITO_CLIENT_SECRET'
   },
   scope: {
-    doc: 'The OAuth2 scope to request, eg land-app-resource-srv/access. Omitted from the token request when not set.',
+    doc: 'The OAuth2 scope to request. CDP configures one resource server scope per API, in the form <service>-resource-srv/access.',
     format: String,
     nullable: true,
-    default: null,
+    default: 'fcp-tp-external-api-resource-srv/access',
     env: 'COGNITO_SCOPE'
   }
 })
