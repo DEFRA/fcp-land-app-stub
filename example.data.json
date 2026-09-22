@@ -1,34 +1,33 @@
 {
   "people": [
     {
-      "crn": 1111111100,
-      "firstName": "Julie",
-      "lastName": "Barnes",
+      "crn": 1111112200,
+      "firstName": "Uma",
+      "lastName": "Walker",
       "organisations": [
         {
           "organisationId": "111111111",
           "sbi": 111111111,
-          "name": "Sheep Every Day"
+          "name": "Juniper Rural Ltd"
         },
         {
-          "organisationId": "3009000",
-          "sbi": 300900001,
-          "name": "Beetles"
+          "organisationId": "222222222",
+          "sbi": 222222222,
+          "name": "Ashfield Estates"
         }
       ]
     },
     {
-      "crn": 1111111901,
-      "firstName": "Glen",
-      "lastName": "Adams",
+      "crn": 1111111902,
+      "firstName": "Frederick",
+      "lastName": "Forsyth",
       "organisations": [
         {
-          "organisationId": "333333333",
-          "sbi": 333333333,
-          "name": "A & F Land Management"
+          "organisationId": "333333334",
+          "sbi": 333333334,
+          "name": "Longacre Farming Ltd"
         }
       ]
     }
   ]
 }
-
