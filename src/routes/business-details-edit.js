@@ -9,6 +9,9 @@ import { createLogger } from '../common/helpers/logging/logger.js'
 
 const logger = createLogger()
 
+const VIEW = 'business-details-edit'
+const PATH = '/business-details/edit'
+
 // Flattens the nested details returned by the external API into the same shape the
 // edit form's fields use, so the same validation schemas can check both the
 // currently stored data and a freshly submitted form.
@@ -44,38 +47,45 @@ function toUpdateInput (sbi, payload) {
   }
 }
 
-export const businessDetailsEdit = {
-  method: ['GET', 'POST'],
-  path: '/business-details/edit',
+const getBusinessDetailsEdit = {
+  method: 'GET',
+  path: PATH,
   options: {
     auth: { scope: FULL_PERMISSIONS }
   },
   handler: async (request, h) => {
     const { sbi, token } = request.auth.credentials
+    const businessDetails = await getBusinessDetails(sbi, token)
 
-    if (request.method === 'get') {
-      const businessDetails = await getBusinessDetails(sbi, token)
-
-      if (!businessDetails) {
-        return h.view('business-details-edit', { cannotUpdate: true })
-      }
-
-      const formValues = toFormValues(businessDetails)
-      const { isValid } = validateBusinessDetails(formValues)
-
-      if (!isValid) {
-        return h.view('business-details-edit', { cannotUpdate: true })
-      }
-
-      return h.view('business-details-edit', { formValues })
+    if (!businessDetails) {
+      return h.view(VIEW, { cannotUpdate: true })
     }
 
+    const formValues = toFormValues(businessDetails)
+    const { isValid } = validateBusinessDetails(formValues)
+
+    if (!isValid) {
+      return h.view(VIEW, { cannotUpdate: true })
+    }
+
+    return h.view(VIEW, { formValues })
+  }
+}
+
+const postBusinessDetailsEdit = {
+  method: 'POST',
+  path: PATH,
+  options: {
+    auth: { scope: FULL_PERMISSIONS }
+  },
+  handler: async (request, h) => {
+    const { sbi, token } = request.auth.credentials
     const payload = request.payload
     const { isValid, errors } = validateBusinessDetails(payload)
 
     if (!isValid) {
       return h
-        .view('business-details-edit', { formValues: payload, errors: formatValidationErrors(errors) })
+        .view(VIEW, { formValues: payload, errors: formatValidationErrors(errors) })
         .code(constants.HTTP_STATUS_BAD_REQUEST)
     }
 
@@ -85,13 +95,12 @@ export const businessDetailsEdit = {
       logger.warn({ error, sbi }, 'Failed to update business details via the external API')
 
       return h
-        .view('business-details-edit', {
-          formValues: payload,
-          updateFailed: true
-        })
+        .view(VIEW, { formValues: payload, updateFailed: true })
         .code(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
     }
 
     return h.redirect('/home?updated=business')
   }
 }
+
+export const businessDetailsEditRoutes = [getBusinessDetailsEdit, postBusinessDetailsEdit]

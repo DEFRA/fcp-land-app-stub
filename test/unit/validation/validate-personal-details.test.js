@@ -44,6 +44,18 @@ describe('validatePersonalDetails', () => {
     expect(isValid).toBe(false)
   })
 
+  test('should fail with a single missing-field message when only the day is missing', () => {
+    const { isValid, errors } = validatePersonalDetails({ ...validPayload, day: '' })
+    expect(isValid).toBe(false)
+    expect(errors.some((error) => error.message === 'Date of birth must include a day')).toBe(true)
+  })
+
+  test('should fail with a combined missing-fields message when the day and year are missing', () => {
+    const { isValid, errors } = validatePersonalDetails({ ...validPayload, day: '', year: '' })
+    expect(isValid).toBe(false)
+    expect(errors.some((error) => error.message === 'Date of birth must include a day and year')).toBe(true)
+  })
+
   test('should fail when neither phone number is provided', () => {
     const { isValid, errors } = validatePersonalDetails({ ...validPayload, personalTelephone: '', personalMobile: '' })
     expect(isValid).toBe(false)

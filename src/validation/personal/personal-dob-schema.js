@@ -2,6 +2,9 @@ import { Joi } from '../joi.js'
 import { MAX_AGE_YEARS } from '../../constants/validation-fields.js'
 import { MONTH_MAP } from '../../constants/month-map.js'
 
+const DOB_INVALID = 'dob.invalid'
+const MONTHS_IN_YEAR = 12
+
 export const personalDobSchema = Joi.object({
   day: Joi.string().allow(''),
   month: Joi.string().allow(''),
@@ -103,7 +106,7 @@ const getFullDate = (day, monthValue, year, helpers) => {
     date.getUTCMonth() + 1 !== monthValue ||
     date.getUTCDate() !== dayValue
   ) {
-    return makeError(helpers, 'dob.invalid', ['day', 'month', 'year'])
+    return makeError(helpers, DOB_INVALID, ['day', 'month', 'year'])
   }
 
   return date
@@ -131,7 +134,7 @@ const getMonthNumber = (month, helpers) => {
     const mapped = MONTH_MAP[lower]
 
     if (!mapped) {
-      return makeError(helpers, 'dob.invalid', ['month'])
+      return makeError(helpers, DOB_INVALID, ['month'])
     }
 
     return mapped
@@ -139,11 +142,23 @@ const getMonthNumber = (month, helpers) => {
 
   const parsedMonth = Number.parseInt(month, 10)
 
-  if (parsedMonth < 1 || parsedMonth > 12) {
-    return makeError(helpers, 'dob.invalid', ['month'])
+  if (parsedMonth < 1 || parsedMonth > MONTHS_IN_YEAR) {
+    return makeError(helpers, DOB_INVALID, ['month'])
   }
 
   return parsedMonth
+}
+
+// Keyed by the presence (true/false) of day, month and year respectively. The combination
+// with all three present has no entry, since that means nothing is missing.
+const MISSING_FIELDS_BY_PRESENCE = {
+  'false-false-false': { code: 'dob.missingAll', fields: ['day', 'month', 'year'] },
+  'false-true-true': { code: 'dob.missingDay', fields: ['day'] },
+  'true-false-true': { code: 'dob.missingMonth', fields: ['month'] },
+  'true-true-false': { code: 'dob.missingYear', fields: ['year'] },
+  'false-false-true': { code: 'dob.missingDayMonth', fields: ['day', 'month'] },
+  'false-true-false': { code: 'dob.missingDayYear', fields: ['day', 'year'] },
+  'true-false-false': { code: 'dob.missingMonthYear', fields: ['month', 'year'] }
 }
 
 /**
@@ -151,29 +166,10 @@ const getMonthNumber = (month, helpers) => {
  * (e.g. day missing, month+year entered, etc.)
  */
 const checkMissingFields = (day, month, year, helpers) => {
-  if (!day && !month && !year) {
-    return makeError(helpers, 'dob.missingAll', ['day', 'month', 'year'])
-  }
-  if (!day && month && year) {
-    return makeError(helpers, 'dob.missingDay', ['day'])
-  }
-  if (day && !month && year) {
-    return makeError(helpers, 'dob.missingMonth', ['month'])
-  }
-  if (day && month && !year) {
-    return makeError(helpers, 'dob.missingYear', ['year'])
-  }
-  if (!day && !month && year) {
-    return makeError(helpers, 'dob.missingDayMonth', ['day', 'month'])
-  }
-  if (!day && month && !year) {
-    return makeError(helpers, 'dob.missingDayYear', ['day', 'year'])
-  }
-  if (day && !month && !year) {
-    return makeError(helpers, 'dob.missingMonthYear', ['month', 'year'])
-  }
+  const presence = `${Boolean(day)}-${Boolean(month)}-${Boolean(year)}`
+  const missing = MISSING_FIELDS_BY_PRESENCE[presence]
 
-  return null
+  return missing ? makeError(helpers, missing.code, missing.fields) : null
 }
 
 /**
