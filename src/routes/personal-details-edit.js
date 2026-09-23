@@ -9,9 +9,6 @@ import { createLogger } from '../common/helpers/logging/logger.js'
 
 const logger = createLogger()
 
-const VIEW = 'personal-details-edit'
-const PATH = '/personal-details/edit'
-
 // Flattens the nested details returned by the external API into the same shape the
 // edit form's fields use, so the same validation schemas can check both the
 // currently stored data and a freshly submitted form.
@@ -57,7 +54,7 @@ function toUpdateInput (crn, payload) {
 
 const getPersonalDetailsEdit = {
   method: 'GET',
-  path: PATH,
+  path: '/personal-details/edit',
   options: {
     auth: { scope: ['user'] }
   },
@@ -66,23 +63,23 @@ const getPersonalDetailsEdit = {
     const personalDetails = await getPersonalDetails(crn, token)
 
     if (!personalDetails) {
-      return h.view(VIEW, { cannotUpdate: true })
+      return h.view('personal-details-edit', { cannotUpdate: true })
     }
 
     const formValues = toFormValues(personalDetails)
     const { isValid } = validatePersonalDetails(formValues)
 
     if (!isValid) {
-      return h.view(VIEW, { cannotUpdate: true })
+      return h.view('personal-details-edit', { cannotUpdate: true })
     }
 
-    return h.view(VIEW, { formValues })
+    return h.view('personal-details-edit', { formValues })
   }
 }
 
 const postPersonalDetailsEdit = {
   method: 'POST',
-  path: PATH,
+  path: '/personal-details/edit',
   options: {
     auth: { scope: ['user'] }
   },
@@ -93,7 +90,7 @@ const postPersonalDetailsEdit = {
 
     if (!isValid) {
       return h
-        .view(VIEW, { formValues: payload, errors: formatValidationErrors(errors) })
+        .view('personal-details-edit', { formValues: payload, errors: formatValidationErrors(errors) })
         .code(constants.HTTP_STATUS_BAD_REQUEST)
     }
 
@@ -103,7 +100,7 @@ const postPersonalDetailsEdit = {
       logger.warn({ error, crn }, 'Failed to update personal details via the external API')
 
       return h
-        .view(VIEW, { formValues: payload, updateFailed: true })
+        .view('personal-details-edit', { formValues: payload, updateFailed: true })
         .code(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
     }
 
