@@ -1,0 +1,156 @@
+{% extends '_layout.njk' %}
+
+{% block pageTitle %}Edit your personal details - {{ serviceName }}{% endblock %}
+
+{% block content %}
+  <h1 class="title is-2">Edit your personal details</h1>
+
+  {% if cannotUpdate %}
+    <div class="notification is-danger">
+      <p>We're unable to update your personal details in this service.</p>
+      <p>Please contact the Rural Payments Agency to update your details.</p>
+    </div>
+    <a class="button is-light" href="/home">Back to your details</a>
+  {% else %}
+    {% if updateFailed %}
+      <div class="notification is-danger">
+        Something went wrong saving your details. Please try again.
+      </div>
+    {% endif %}
+
+    <form method="post" action="/personal-details/edit" novalidate>
+      <h2 class="title is-4">Name</h2>
+
+      <div class="field">
+        <label class="label" for="first">First name</label>
+        <div class="control">
+          <input class="input {% if errors.first %}is-danger{% endif %}" type="text" id="first" name="first" value="{{ formValues.first }}">
+        </div>
+        {% if errors.first %}<p class="help is-danger">{{ errors.first.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="middle">Middle names (optional)</label>
+        <div class="control">
+          <input class="input {% if errors.middle %}is-danger{% endif %}" type="text" id="middle" name="middle" value="{{ formValues.middle }}">
+        </div>
+        {% if errors.middle %}<p class="help is-danger">{{ errors.middle.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="last">Last name</label>
+        <div class="control">
+          <input class="input {% if errors.last %}is-danger{% endif %}" type="text" id="last" name="last" value="{{ formValues.last }}">
+        </div>
+        {% if errors.last %}<p class="help is-danger">{{ errors.last.text }}</p>{% endif %}
+      </div>
+
+      <h2 class="title is-4 mt-5">Date of birth</h2>
+
+      <div class="field is-grouped">
+        <div class="control">
+          <label class="label" for="day">Day</label>
+          <input class="input {% if errors.day %}is-danger{% endif %}" type="text" inputmode="numeric" id="day" name="day" value="{{ formValues.day }}" style="width: 5em">
+        </div>
+        <div class="control">
+          <label class="label" for="month">Month</label>
+          <input class="input {% if errors.month %}is-danger{% endif %}" type="text" inputmode="numeric" id="month" name="month" value="{{ formValues.month }}" style="width: 5em">
+        </div>
+        <div class="control">
+          <label class="label" for="year">Year</label>
+          <input class="input {% if errors.year %}is-danger{% endif %}" type="text" inputmode="numeric" id="year" name="year" value="{{ formValues.year }}" style="width: 7em">
+        </div>
+      </div>
+      {% if errors.day %}<p class="help is-danger">{{ errors.day.text }}</p>{% endif %}
+
+      <h2 class="title is-4 mt-5">Address</h2>
+
+      <div class="field">
+        <label class="label" for="line1">Address line 1</label>
+        <div class="control">
+          <input class="input {% if errors.line1 %}is-danger{% endif %}" type="text" id="line1" name="line1" value="{{ formValues.line1 }}">
+        </div>
+        {% if errors.line1 %}<p class="help is-danger">{{ errors.line1.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="line2">Address line 2 (optional)</label>
+        <div class="control">
+          <input class="input {% if errors.line2 %}is-danger{% endif %}" type="text" id="line2" name="line2" value="{{ formValues.line2 }}">
+        </div>
+        {% if errors.line2 %}<p class="help is-danger">{{ errors.line2.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="line3">Address line 3 (optional)</label>
+        <div class="control">
+          <input class="input {% if errors.line3 %}is-danger{% endif %}" type="text" id="line3" name="line3" value="{{ formValues.line3 }}">
+        </div>
+        {% if errors.line3 %}<p class="help is-danger">{{ errors.line3.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="city">Town or city</label>
+        <div class="control">
+          <input class="input {% if errors.city %}is-danger{% endif %}" type="text" id="city" name="city" value="{{ formValues.city }}">
+        </div>
+        {% if errors.city %}<p class="help is-danger">{{ errors.city.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="county">County (optional)</label>
+        <div class="control">
+          <input class="input {% if errors.county %}is-danger{% endif %}" type="text" id="county" name="county" value="{{ formValues.county }}">
+        </div>
+        {% if errors.county %}<p class="help is-danger">{{ errors.county.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="postalCode">Postcode</label>
+        <div class="control">
+          <input class="input {% if errors.postalCode %}is-danger{% endif %}" type="text" id="postalCode" name="postalCode" value="{{ formValues.postalCode }}">
+        </div>
+        {% if errors.postalCode %}<p class="help is-danger">{{ errors.postalCode.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="country">Country</label>
+        <div class="control">
+          <input class="input {% if errors.country %}is-danger{% endif %}" type="text" id="country" name="country" value="{{ formValues.country }}">
+        </div>
+        {% if errors.country %}<p class="help is-danger">{{ errors.country.text }}</p>{% endif %}
+      </div>
+
+      <h2 class="title is-4 mt-5">Contact details</h2>
+
+      <div class="field">
+        <label class="label" for="personalTelephone">Telephone (optional)</label>
+        <div class="control">
+          <input class="input {% if errors.personalTelephone %}is-danger{% endif %}" type="text" id="personalTelephone" name="personalTelephone" value="{{ formValues.personalTelephone }}">
+        </div>
+        {% if errors.personalTelephone %}<p class="help is-danger">{{ errors.personalTelephone.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="personalMobile">Mobile (optional)</label>
+        <div class="control">
+          <input class="input {% if errors.personalMobile %}is-danger{% endif %}" type="text" id="personalMobile" name="personalMobile" value="{{ formValues.personalMobile }}">
+        </div>
+        {% if errors.personalMobile %}<p class="help is-danger">{{ errors.personalMobile.text }}</p>{% endif %}
+      </div>
+
+      <div class="field">
+        <label class="label" for="personalEmail">Email address</label>
+        <div class="control">
+          <input class="input {% if errors.personalEmail %}is-danger{% endif %}" type="text" id="personalEmail" name="personalEmail" value="{{ formValues.personalEmail }}">
+        </div>
+        {% if errors.personalEmail %}<p class="help is-danger">{{ errors.personalEmail.text }}</p>{% endif %}
+      </div>
+
+      <div class="buttons mt-5">
+        <button class="button is-primary" type="submit">Save changes</button>
+        <a class="button is-light" href="/home">Cancel</a>
+      </div>
+    </form>
+  {% endif %}
+{% endblock %}
