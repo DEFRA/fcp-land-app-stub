@@ -29,6 +29,12 @@
     <a href="/session">View your raw session details</a>
   </p>
 
+  {% if updated == 'personal' %}
+    <div class="notification is-success">Your personal details have been updated.</div>
+  {% elif updated == 'business' %}
+    <div class="notification is-success">Your business details have been updated.</div>
+  {% endif %}
+
   <h2 class="title is-4">Your personal details</h2>
 
   {% if personalDetails %}
@@ -67,6 +73,10 @@
       Unable to load your personal details right now.
     </div>
   {% endif %}
+
+  <p class="content">
+    <a href="/personal-details/edit">Edit your personal details</a>
+  </p>
 
   <h2 class="title is-4 mt-6">Your business details</h2>
 
@@ -135,5 +145,11 @@
     <div class="notification is-warning">
       Unable to load your business details right now.
     </div>
+  {% endif %}
+
+  {% if canEditBusiness %}
+    <p class="content">
+      <a href="/business-details/edit">Edit your business details</a>
+    </p>
   {% endif %}
 {% endblock %}
