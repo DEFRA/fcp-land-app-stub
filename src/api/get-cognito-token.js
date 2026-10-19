@@ -51,7 +51,7 @@ async function requestAccessToken () {
   const body = scope ? `grant_type=client_credentials&scope=${scope}` : 'grant_type=client_credentials'
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
 
-  logger.info({ tokenUrl }, 'Requesting Cognito access token')
+  logger.info(`Requesting Cognito access token from ${tokenUrl}`)
 
   const response = await fetch(tokenUrl, {
     method: 'POST',
@@ -66,7 +66,7 @@ async function requestAccessToken () {
     // Safe to log: this is Cognito's response, never the request we sent, so the
     // client secret is never in it
     const errorBody = await response.text()
-    logger.error({ status: response.status, tokenUrl, errorBody }, 'Failed to get Cognito access token')
+    logger.error(`Failed to get Cognito access token from ${tokenUrl}: ${response.status} ${errorBody}`)
     throw new Error(`Cognito authentication failed: ${response.status}`)
   }
 
