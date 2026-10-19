@@ -65,7 +65,7 @@ describe('getPermissions', () => {
     mockQuery.mockRejectedValue(error)
     const result = await getPermissions(sbi, crn, token)
     expect(result).toEqual({ scope: ['user'] })
-    expect(mockLoggerWarn).toHaveBeenCalledWith({ err: error, user: { id: crn }, sbi }, expect.any(String))
+    expect(mockLoggerWarn).toHaveBeenCalledWith({ err: error, user: { id: crn } }, expect.stringContaining(sbi))
   })
 
   test('should fall back to the default scope when the response fails schema validation', async () => {

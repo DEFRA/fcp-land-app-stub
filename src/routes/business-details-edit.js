@@ -89,7 +89,7 @@ const postBusinessDetailsEdit = {
     try {
       await updateBusinessDetails(toUpdateInput(sbi, payload), token)
     } catch (error) {
-      logger.warn({ err: error, sbi }, 'Failed to update business details via the external API')
+      logger.warn({ err: error }, `Failed to update business details via the external API for SBI ${sbi}`)
 
       return h
         .view('business-details-edit', { formValues: payload, updateFailed: true })

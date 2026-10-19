@@ -29,7 +29,7 @@ async function getPermissions (sbi, crn, token) {
   } catch (error) {
     // The external API being unreachable, or the user having no relationship with this
     // SBI/CRN, should not block sign in - it just means they see the minimum permission set
-    logger.warn({ err: error, user: { id: crn }, sbi }, 'Failed to get permissions from the external API, falling back to default scope')
+    logger.warn({ err: error, user: { id: crn } }, `Failed to get permissions from the external API for SBI ${sbi}, falling back to default scope`)
 
     return { scope: [DEFAULT_SCOPE] }
   }
