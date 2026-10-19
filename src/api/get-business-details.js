@@ -19,7 +19,7 @@ async function getBusinessDetails (sbi, token) {
       : null
   } catch (error) {
     // A failed lookup should not break the page - it just means the section can't be shown
-    logger.warn({ error, sbi }, 'Failed to get business details from the external API')
+    logger.warn({ err: error, sbi }, 'Failed to get business details from the external API')
 
     return null
   }

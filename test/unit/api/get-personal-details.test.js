@@ -50,6 +50,6 @@ describe('getPersonalDetails', () => {
     mockQuery.mockRejectedValue(error)
     const result = await getPersonalDetails(crn, token)
     expect(result).toBeNull()
-    expect(mockLoggerWarn).toHaveBeenCalledWith({ error, crn }, expect.any(String))
+    expect(mockLoggerWarn).toHaveBeenCalledWith({ err: error, crn }, expect.any(String))
   })
 })

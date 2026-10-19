@@ -12,7 +12,7 @@ async function getPersonalDetails (crn, token) {
     return data.customer ? { crn: data.customer.crn, ...data.customer.info } : null
   } catch (error) {
     // A failed lookup should not break the page - it just means the section can't be shown
-    logger.warn({ error, crn }, 'Failed to get personal details from the external API')
+    logger.warn({ err: error, crn }, 'Failed to get personal details from the external API')
 
     return null
   }

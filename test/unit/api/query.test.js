@@ -126,4 +126,21 @@ describe('query', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(2)
   })
+
+  test('should include the underlying cause when the connection fails', async () => {
+    const cause = Object.assign(new Error('connect ECONNREFUSED 10.0.0.1:443'), { code: 'ECONNREFUSED' })
+    const fetchError = new TypeError('fetch failed', { cause })
+    mockFetch.mockRejectedValue(fetchError)
+
+    const error = await query('query { business }', {}).catch((e) => e)
+
+    expect(error.message).toBe('External API request to https://external-api.example.com/graphql failed: fetch failed (ECONNREFUSED connect ECONNREFUSED 10.0.0.1:443)')
+    expect(error.cause).toBe(fetchError)
+  })
+
+  test('should describe a timeout when the error has no cause', async () => {
+    mockFetch.mockRejectedValue(new DOMException('The operation was aborted due to timeout', 'TimeoutError'))
+
+    await expect(query('query { business }', {})).rejects.toThrow('failed: TimeoutError: The operation was aborted due to timeout')
+  })
 })
