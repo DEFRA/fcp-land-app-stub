@@ -61,6 +61,6 @@ describe('getBusinessDetails', () => {
     mockQuery.mockRejectedValue(error)
     const result = await getBusinessDetails(sbi, token)
     expect(result).toBeNull()
-    expect(mockLoggerWarn).toHaveBeenCalledWith({ error, sbi }, expect.any(String))
+    expect(mockLoggerWarn).toHaveBeenCalledWith({ err: error }, expect.stringContaining(sbi))
   })
 })

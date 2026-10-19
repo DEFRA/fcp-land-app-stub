@@ -97,7 +97,7 @@ const postPersonalDetailsEdit = {
     try {
       await updatePersonalDetails(toUpdateInput(crn, payload), token)
     } catch (error) {
-      logger.warn({ error, crn }, 'Failed to update personal details via the external API')
+      logger.warn({ err: error, user: { id: crn } }, 'Failed to update personal details via the external API')
 
       return h
         .view('personal-details-edit', { formValues: payload, updateFailed: true })

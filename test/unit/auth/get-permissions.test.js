@@ -61,10 +61,11 @@ describe('getPermissions', () => {
   })
 
   test('should fall back to the default scope and log a warning when the query throws', async () => {
-    mockQuery.mockRejectedValue(new Error('External API unreachable'))
+    const error = new Error('External API unreachable')
+    mockQuery.mockRejectedValue(error)
     const result = await getPermissions(sbi, crn, token)
     expect(result).toEqual({ scope: ['user'] })
-    expect(mockLoggerWarn).toHaveBeenCalled()
+    expect(mockLoggerWarn).toHaveBeenCalledWith({ err: error, user: { id: crn } }, expect.stringContaining(sbi))
   })
 
   test('should fall back to the default scope when the response fails schema validation', async () => {

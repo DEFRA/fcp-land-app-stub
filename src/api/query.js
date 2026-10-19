@@ -27,12 +27,19 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
     headers.Authorization = `Bearer ${accessToken}`
   }
 
-  const response = await fetch(config.get('externalApi.endpoint'), {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ query: document, variables }),
-    signal: AbortSignal.timeout(config.get('externalApi.timeout'))
-  })
+  const endpoint = config.get('externalApi.endpoint')
+
+  let response
+  try {
+    response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ query: document, variables }),
+      signal: AbortSignal.timeout(config.get('externalApi.timeout'))
+    })
+  } catch (error) {
+    throw new Error(`External API request to ${endpoint} failed: ${describeFetchError(error)}`, { cause: error })
+  }
 
   if ((response.status === HTTP_STATUS_UNAUTHORIZED || response.status === HTTP_STATUS_FORBIDDEN) && accessToken && retryOnAuthFailure) {
     // Covers the CDP client secret rotation window: if the cached token is rejected,
@@ -54,6 +61,16 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
   }
 
   return body.data
+}
+
+// fetch reports connectivity problems as a generic "fetch failed" TypeError, with the real
+// reason (ECONNREFUSED, ENOTFOUND, certificate errors...) on error.cause, which ECS log
+// formatting does not output. Timeouts surface as a TimeoutError with no cause.
+function describeFetchError (error) {
+  const cause = error.cause
+  const detail = [cause?.code, cause?.message].filter(Boolean).join(' ')
+
+  return detail ? `${error.message} (${detail})` : `${error.name}: ${error.message}`
 }
 
 export { query }

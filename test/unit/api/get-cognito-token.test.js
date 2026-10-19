@@ -139,6 +139,13 @@ describe('getAccessToken', () => {
     await expect(getAccessToken()).rejects.toThrow()
   })
 
+  test('should log the token url, status and response body in the message when the token request fails', async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 401, text: async () => 'invalid_client' })
+    await expect(getAccessToken()).rejects.toThrow()
+    expect(mockLoggerError).toHaveBeenCalledTimes(1)
+    expect(mockLoggerError).toHaveBeenCalledWith(expect.stringMatching(/amazoncognito\.com.*: 401 invalid_client$/))
+  })
+
   test('should request a fresh token after clearCachedToken is called', async () => {
     mockFetch.mockResolvedValue(okResponse({ access_token: 'a-token', expires_in: 3600 }))
 

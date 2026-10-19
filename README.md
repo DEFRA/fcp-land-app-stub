@@ -585,6 +585,14 @@ The service runs on the Core Delivery Platform (CDP). The Dockerfile has `develo
 Health checks are served from `/health` via `hapi-pulse`, logs are ECS formatted in
 production, and requests are traced through the `x-cdp-request-id` header.
 
+When logging a caught error, pass it under the `err` key, e.g.
+`logger.warn({ err: error, sbi }, 'Failed to ...')`. Only `err` is converted to the ECS
+`error.type`, `error.message` and `error.stack_trace` fields CDP expects; an Error logged
+as `error` is output as `{}`. Use CDP's definable ECS fields where one exists, such as
+`user: { id: crn }`. Fields CDP doesn't list (such as `sbi`, `tokenUrl` or `statusCode`) are dropped, so put that
+context in the message instead. Failed calls to the external API also carry the underlying
+network cause (such as `ECONNREFUSED` or a timeout) in the error message.
+
 ## SonarQube Cloud
 
 Instructions for setting up SonarQube Cloud can be found in [sonar-project.properties](./sonar-project.properties).

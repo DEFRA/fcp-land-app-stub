@@ -26,11 +26,8 @@ export function catchAll (request, h) {
   }
 
   if (statusCode >= HTTP_STATUS_INTERNAL_SERVER_ERROR) {
-    request.log(['error'], {
-      statusCode,
-      message: response.message,
-      stack: response.data?.stack
-    })
+    // Logging the Error itself gives CDP the error.* fields, including the stack trace
+    request.log(['error'], response)
   }
 
   const viewResponse = h.view(template).code(statusCode)
