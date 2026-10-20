@@ -123,14 +123,6 @@ describe('GET /home', () => {
     expect(response.payload).not.toContain(businessDetails.vat)
   })
 
-  test('should offer a link to the session details page', async () => {
-    const response = await server.inject({
-      url: '/home',
-      auth: { strategy: 'session', credentials }
-    })
-    expect(response.payload).toContain('href="/session"')
-  })
-
   test('should offer change organisation and sign out links', async () => {
     const response = await server.inject({
       url: '/home',

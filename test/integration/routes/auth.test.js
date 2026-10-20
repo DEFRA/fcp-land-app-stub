@@ -13,6 +13,11 @@ vi.mock('../../../src/auth/get-permissions.js', async () => ({
   getPermissions: mockGetPermissions
 }))
 
+const mockGetPersonalDetails = vi.fn()
+vi.mock('../../../src/api/get-personal-details.js', () => ({
+  getPersonalDetails: mockGetPersonalDetails
+}))
+
 const mockGetSafeRedirect = vi.fn()
 vi.mock('../../../src/utils/get-safe-redirect.js', () => ({
   getSafeRedirect: mockGetSafeRedirect
@@ -109,6 +114,7 @@ describe('auth routes', () => {
       path = '/auth/sign-in-oidc'
       mockGetSafeRedirect.mockReturnValue('/home')
       mockGetPermissions.mockResolvedValue({ scope })
+      mockGetPersonalDetails.mockResolvedValue({ name: { first: 'Fake', middle: null, last: 'Name' } })
     })
 
     test('redirects to oidc sign in page if unauthenticated', async () => {
@@ -221,6 +227,45 @@ describe('auth routes', () => {
       expect(cache.organisationId).toBe(credentials.profile.organisationId)
       expect(cache.sbi).toBe(credentials.profile.sbi)
       expect(cache.role).toBe(credentials.profile.role)
+    })
+
+    test('should set the name from personal details in session cache in place of the token name', async () => {
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'defra-id',
+          credentials
+        }
+      })
+      expect(mockGetPersonalDetails).toHaveBeenCalledWith(credentials.profile.crn, credentials.token)
+      const cache = await server.app.cache.get(credentials.profile.sessionId)
+      expect(cache.name).toBe('Fake Name')
+    })
+
+    test('should include the middle name when present', async () => {
+      mockGetPersonalDetails.mockResolvedValueOnce({ name: { first: 'Fake', middle: 'Middle', last: 'Name' } })
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'defra-id',
+          credentials
+        }
+      })
+      const cache = await server.app.cache.get(credentials.profile.sessionId)
+      expect(cache.name).toBe('Fake Middle Name')
+    })
+
+    test.each([null, { name: null }, { name: { first: null, middle: null, last: null } }])('should fall back to User when personal details are %j', async (details) => {
+      mockGetPersonalDetails.mockResolvedValueOnce(details)
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'defra-id',
+          credentials
+        }
+      })
+      const cache = await server.app.cache.get(credentials.profile.sessionId)
+      expect(cache.name).toBe('User')
     })
 
     test('should set user permissions in session cache', async () => {

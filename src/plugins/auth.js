@@ -38,7 +38,9 @@ function getBellOptions (oidcConfig) {
       token: oidcConfig.token_endpoint,
       scope: ['openid', 'offline_access', config.get('defraId.clientId')],
       profile: function (credentials, _params, _get) {
-        const payload = Jwt.token.decode(credentials.token).decoded.payload
+        // Personal details are sanitised by the external API, so the real name and email
+        // from the token are discarded here and never reach the credentials or session
+        const { firstName: _firstName, lastName: _lastName, email: _email, ...payload } = Jwt.token.decode(credentials.token).decoded.payload
 
         // sbi, organisationName and role aren't separate claims: they're embedded
         // in the relationships and roles entries for the currently selected
@@ -50,7 +52,6 @@ function getBellOptions (oidcConfig) {
         credentials.profile = {
           ...payload,
           crn: payload.contactId,
-          name: `${payload.firstName} ${payload.lastName}`,
           organisationId: payload.currentRelationshipId,
           sbi,
           organisationName,

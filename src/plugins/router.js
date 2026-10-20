@@ -4,7 +4,6 @@ import { health } from '../routes/health.js'
 import { home } from '../routes/home.js'
 import { index } from '../routes/index.js'
 import { personalDetailsEditRoutes } from '../routes/personal-details-edit.js'
-import { session } from '../routes/session.js'
 import { serveStaticFiles } from '../common/helpers/serve-static-files.js'
 
 export const router = {
@@ -14,7 +13,6 @@ export const router = {
       server.route([].concat(
         index,
         home,
-        session,
         personalDetailsEditRoutes,
         businessDetailsEditRoutes,
         health,
