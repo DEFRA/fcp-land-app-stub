@@ -36,7 +36,7 @@ services:
       COGNITO_ENABLED: ${COGNITO_ENABLED:-false}
       COGNITO_DOMAIN: ${COGNITO_DOMAIN:-}
       COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-}
-      COGNITO_CLIENT_SECRET: ${COGNITO_CLIENT_SECRET:-}
+      COGNITO_SECRET: ${COGNITO_SECRET:-}
       COGNITO_SCOPE: ${COGNITO_SCOPE:-fcp-tp-external-api-resource-srv/access}
     # host.docker.internal reaches fcp-tp-external-api's own compose stack from
     # inside this container. It does NOT reach fcp-defra-id-stub's token/JWKS
