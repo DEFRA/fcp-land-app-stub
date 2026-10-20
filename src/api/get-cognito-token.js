@@ -48,7 +48,9 @@ async function requestAccessToken () {
   }
 
   // CDP issues one login URL per API, in the form https://<service>-<suffix>.auth.<region>.amazoncognito.com
-  const tokenUrl = `https://${domain}/oauth2/token`
+  // Tolerate COGNITO_DOMAIN being set as a full URL rather than a bare host name
+  const host = domain.replace(/^https?:\/\//, '').replace(/\/+$/, '')
+  const tokenUrl = `https://${host}/oauth2/token`
   const body = scope ? `grant_type=client_credentials&scope=${scope}` : 'grant_type=client_credentials'
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
 

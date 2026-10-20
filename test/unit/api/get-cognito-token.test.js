@@ -67,6 +67,16 @@ describe('getAccessToken', () => {
     expect(url).toBe('https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token')
   })
 
+  test('should not double up the scheme when the domain is configured as a full URL', async () => {
+    mockConfigGet.mockImplementation((key) => key === 'cognito.domain' ? 'https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/' : configValues[key])
+    mockFetch.mockResolvedValue(okResponse({ access_token: 'a-token', expires_in: 3600 }))
+
+    await getAccessToken()
+
+    const [url] = mockFetch.mock.calls[0]
+    expect(url).toBe('https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token')
+  })
+
   test('should send the client credentials as a Basic auth header', async () => {
     mockFetch.mockResolvedValue(okResponse({ access_token: 'a-token', expires_in: 3600 }))
 
