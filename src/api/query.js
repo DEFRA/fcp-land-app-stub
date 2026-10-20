@@ -52,8 +52,8 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
       signal: AbortSignal.timeout(config.get('externalApi.timeout'))
     })
   } catch (error) {
-    const durationMs = Date.now() - startedAt
-    logger.error({ ...requestContext, durationMs, err: error }, `External API request to ${endpoint} failed after ${durationMs}ms: ${describeFetchError(error)}`)
+    const failedAfterMs = Date.now() - startedAt
+    logger.error({ ...requestContext, durationMs: failedAfterMs, err: error }, `External API request to ${endpoint} failed after ${failedAfterMs}ms: ${describeFetchError(error)}`)
     throw new Error(`External API request to ${endpoint} failed: ${describeFetchError(error)}`, { cause: error })
   }
 
