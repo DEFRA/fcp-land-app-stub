@@ -43,7 +43,7 @@ async function requestAccessToken () {
   const scope = config.get('cognito.scope')
 
   if (!domain || !clientId || !clientSecret) {
-    throw new Error('COGNITO_DOMAIN, COGNITO_CLIENT_ID and COGNITO_CLIENT_SECRET are required when COGNITO_ENABLED=true')
+    throw new Error('COGNITO_DOMAIN, COGNITO_CLIENT_ID and COGNITO_SECRET are required when COGNITO_ENABLED=true')
   }
 
   // CDP issues one login URL per API, in the form https://<service>-<suffix>.auth.<region>.amazoncognito.com

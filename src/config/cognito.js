@@ -27,7 +27,7 @@ const config = convict({
     nullable: true,
     default: null,
     sensitive: true,
-    env: 'COGNITO_CLIENT_SECRET'
+    env: 'COGNITO_SECRET'
   },
   scope: {
     doc: 'The OAuth2 scope to request. CDP configures one resource server scope per API, in the form <service>-resource-srv/access.',
