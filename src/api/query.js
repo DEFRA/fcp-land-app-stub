@@ -1,5 +1,9 @@
 import { getAccessToken, clearCachedToken } from './get-cognito-token.js'
 import { config } from '../config/config.js'
+import { createLogger } from '../common/helpers/logging/logger.js'
+import { describeFetchError } from './describe-fetch-error.js'
+
+const logger = createLogger()
 
 const HTTP_STATUS_UNAUTHORIZED = 401
 const HTTP_STATUS_FORBIDDEN = 403
@@ -28,7 +32,17 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
   }
 
   const endpoint = config.get('externalApi.endpoint')
+  // Only booleans are logged for credentials, never the tokens themselves
+  const requestContext = {
+    endpoint,
+    hasUserToken: Boolean(userToken),
+    hasAccessToken: Boolean(accessToken),
+    isRetry: !retryOnAuthFailure
+  }
 
+  logger.info(requestContext, `Sending request to the external API at ${endpoint}`)
+
+  const startedAt = Date.now()
   let response
   try {
     response = await fetch(endpoint, {
@@ -38,18 +52,25 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
       signal: AbortSignal.timeout(config.get('externalApi.timeout'))
     })
   } catch (error) {
+    const durationMs = Date.now() - startedAt
+    logger.error({ ...requestContext, durationMs, err: error }, `External API request to ${endpoint} failed after ${durationMs}ms: ${describeFetchError(error)}`)
     throw new Error(`External API request to ${endpoint} failed: ${describeFetchError(error)}`, { cause: error })
   }
+
+  const durationMs = Date.now() - startedAt
+  logger.info({ ...requestContext, status: response.status, durationMs }, `External API responded with ${response.status} in ${durationMs}ms`)
 
   if ((response.status === HTTP_STATUS_UNAUTHORIZED || response.status === HTTP_STATUS_FORBIDDEN) && accessToken && retryOnAuthFailure) {
     // Covers the CDP client secret rotation window: if the cached token is rejected,
     // drop it and retry once with a freshly requested one
+    logger.warn({ ...requestContext, status: response.status }, 'External API rejected the access token, clearing the cached token and retrying once')
     clearCachedToken()
     return sendRequest(document, variables, userToken, false)
   }
 
   if (!response.ok) {
     const errorBody = await response.text()
+    logger.error({ ...requestContext, status: response.status, durationMs }, `External API request failed: ${response.status} ${errorBody}`)
     throw new Error(`External API request failed: ${response.status} ${errorBody}`)
   }
 
@@ -57,20 +78,11 @@ async function sendRequest (document, variables, userToken, retryOnAuthFailure) 
 
   if (body.errors?.length) {
     const [error] = body.errors
+    logger.error({ ...requestContext, status: response.status, durationMs, errorCount: body.errors.length }, `External API returned an error: ${error.message} (${error.extensions?.code})`)
     throw new Error(`External API returned an error: ${error.message} (${error.extensions?.code})`)
   }
 
   return body.data
-}
-
-// fetch reports connectivity problems as a generic "fetch failed" TypeError, with the real
-// reason (ECONNREFUSED, ENOTFOUND, certificate errors...) on error.cause, which ECS log
-// formatting does not output. Timeouts surface as a TimeoutError with no cause.
-function describeFetchError (error) {
-  const cause = error.cause
-  const detail = [cause?.code, cause?.message].filter(Boolean).join(' ')
-
-  return detail ? `${error.message} (${detail})` : `${error.name}: ${error.message}`
 }
 
 export { query }
