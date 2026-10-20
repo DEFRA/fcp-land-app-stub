@@ -477,7 +477,7 @@ depending on your environment, three optional ones:
 | FCP third party external API URL | `EXTERNAL_API_ENDPOINT` | Always |
 | Cognito domain | `COGNITO_DOMAIN` | Only if `COGNITO_ENABLED=true` |
 | Cognito client ID | `COGNITO_CLIENT_ID` | Only if `COGNITO_ENABLED=true` |
-| Cognito client secret | `COGNITO_CLIENT_SECRET` | Only if `COGNITO_ENABLED=true` |
+| Cognito client secret | `COGNITO_SECRET` | Only if `COGNITO_ENABLED=true` |
 
 `COGNITO_ENABLED` defaults to `false`. Set it to `true`, and provide the three Cognito
 values above, once the CDP platform team has put the external API behind an
@@ -573,7 +573,7 @@ All configuration goes through Convict in [src/config](src/config). Never read
 | `COGNITO_ENABLED` | `false` | Authenticate to the external API's CDP gateway with Cognito |
 | `COGNITO_DOMAIN` | | Cognito domain, eg `your-service-c63f2.auth.eu-west-2.amazoncognito.com` |
 | `COGNITO_CLIENT_ID` | | Cognito app client ID |
-| `COGNITO_CLIENT_SECRET` | | Cognito app client secret |
+| `COGNITO_SECRET` | | Cognito app client secret |
 | `COGNITO_SCOPE` | `fcp-tp-external-api-resource-srv/access` | OAuth2 scope to request, matching CDP's one-resource-server-per-API convention |
 | `HTTP_PROXY` | | Outbound proxy, set by the platform |
 | `ENABLE_SECURE_CONTEXT` | `true` in production | Load `TRUSTSTORE_` certificates |
