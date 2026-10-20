@@ -1,8 +1,14 @@
+import { getPersonalDetails } from '../api/get-personal-details.js'
 import { getPermissions } from '../auth/get-permissions.js'
 import { getSignOutUrl } from '../auth/get-sign-out-url.js'
 import { validateState } from '../auth/state.js'
 import { verifyToken } from '../auth/verify-token.js'
 import { getSafeRedirect } from '../utils/get-safe-redirect.js'
+
+function formatName (name) {
+  const fullName = [name?.first, name?.middle, name?.last].filter(Boolean).join(' ')
+  return fullName || null
+}
 
 export const authRoutes = [{
   method: 'GET',
@@ -37,10 +43,15 @@ export const authRoutes = [{
     // These calls are authenticated using the token returned from Defra Identity
     const { scope } = await getPermissions(profile.sbi, profile.crn, token)
 
+    // The external API sanitizes personal data, so use its name in place of the one from the token
+    const personalDetails = await getPersonalDetails(profile.crn, token)
+    const name = formatName(personalDetails?.name) ?? profile.name
+
     // Store token and all useful data in the session cache
     await request.server.app.cache.set(profile.sessionId, {
       isAuthenticated: true,
       ...profile,
+      name,
       scope,
       token,
       refreshToken
