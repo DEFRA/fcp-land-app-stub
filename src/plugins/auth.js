@@ -50,7 +50,6 @@ function getBellOptions (oidcConfig) {
         credentials.profile = {
           ...payload,
           crn: payload.contactId,
-          name: `${payload.firstName} ${payload.lastName}`,
           organisationId: payload.currentRelationshipId,
           sbi,
           organisationName,

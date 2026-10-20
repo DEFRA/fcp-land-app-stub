@@ -83,7 +83,6 @@ describe('getBellOptions', () => {
 
       expect(credentials.profile.crn).toBe('1234567890')
       expect(credentials.profile.organisationId).toBe('1234567')
-      expect(credentials.profile.name).toBe('Andrew Farmer')
       expect(credentials.profile.firstName).toBe('Andrew')
       expect(credentials.profile.sbi).toBe('107183280')
       expect(credentials.profile.organisationName).toBe('Farms Ltd')

@@ -25,10 +25,6 @@
   <h1 class="title is-2">Welcome, {{ auth.name }}</h1>
   <p class="subtitle is-5">Organisation {{ auth.organisationName }}</p>
 
-  <p class="content">
-    <a href="/session">View your raw session details</a>
-  </p>
-
   {% if updated == 'personal' %}
     <div class="notification is-success">Your personal details have been updated.</div>
   {% elif updated == 'business' %}
