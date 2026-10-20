@@ -1,5 +1,6 @@
 import { createLogger } from '../common/helpers/logging/logger.js'
 import { config } from '../config/config.js'
+import { describeFetchError } from './describe-fetch-error.js'
 
 const logger = createLogger()
 
@@ -53,14 +54,22 @@ async function requestAccessToken () {
 
   logger.info(`Requesting Cognito access token from ${tokenUrl}`)
 
-  const response = await fetch(tokenUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${credentials}`
-    },
-    body
-  })
+  const startedAt = Date.now()
+  let response
+  try {
+    response = await fetch(tokenUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${credentials}`
+      },
+      body
+    })
+  } catch (error) {
+    const durationMs = Date.now() - startedAt
+    logger.error({ tokenUrl, durationMs, err: error }, `Cognito token request to ${tokenUrl} failed after ${durationMs}ms: ${describeFetchError(error)}`)
+    throw new Error(`Cognito token request to ${tokenUrl} failed: ${describeFetchError(error)}`, { cause: error })
+  }
 
   if (!response.ok) {
     // Safe to log: this is Cognito's response, never the request we sent, so the
@@ -74,6 +83,8 @@ async function requestAccessToken () {
 
   cachedToken = accessToken
   tokenExpiry = Date.now() + (expiresIn * 1000)
+
+  logger.info({ tokenUrl, expiresIn, durationMs: Date.now() - startedAt }, `Received Cognito access token from ${tokenUrl}`)
 
   return cachedToken
 }

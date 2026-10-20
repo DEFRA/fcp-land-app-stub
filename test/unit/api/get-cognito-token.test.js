@@ -146,6 +146,38 @@ describe('getAccessToken', () => {
     expect(mockLoggerError).toHaveBeenCalledWith(expect.stringMatching(/amazoncognito\.com.*: 401 invalid_client$/))
   })
 
+  test('should log and rethrow with the underlying cause when the connection to Cognito fails', async () => {
+    const cause = Object.assign(new Error('getaddrinfo ENOTFOUND land-app-c63f2.auth.eu-west-2.amazoncognito.com'), { code: 'ENOTFOUND' })
+    const fetchError = new TypeError('fetch failed', { cause })
+    mockFetch.mockRejectedValue(fetchError)
+    mockLoggerError.mockClear()
+
+    const error = await getAccessToken().catch((e) => e)
+
+    expect(error.message).toContain('Cognito token request to https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token failed: fetch failed (ENOTFOUND getaddrinfo ENOTFOUND')
+    expect(error.cause).toBe(fetchError)
+    expect(mockLoggerError).toHaveBeenCalledTimes(1)
+    expect(mockLoggerError).toHaveBeenCalledWith(
+      expect.objectContaining({ err: fetchError, tokenUrl: 'https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token' }),
+      expect.stringContaining('ENOTFOUND')
+    )
+  })
+
+  test('should log when a token is received without logging the token or client secret', async () => {
+    mockFetch.mockResolvedValue(okResponse({ access_token: 'a-secret-token', expires_in: 3600 }))
+    mockLoggerInfo.mockClear()
+
+    await getAccessToken()
+
+    expect(mockLoggerInfo).toHaveBeenCalledWith(
+      expect.objectContaining({ expiresIn: 3600 }),
+      expect.stringContaining('Received Cognito access token')
+    )
+    const logged = JSON.stringify(mockLoggerInfo.mock.calls)
+    expect(logged).not.toContain('a-secret-token')
+    expect(logged).not.toContain('mock-client-secret')
+  })
+
   test('should request a fresh token after clearCachedToken is called', async () => {
     mockFetch.mockResolvedValue(okResponse({ access_token: 'a-token', expires_in: 3600 }))
 
