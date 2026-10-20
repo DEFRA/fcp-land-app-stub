@@ -38,9 +38,6 @@ const credentials = {
   profile: {
     sessionId: 'session-id',
     crn: '1234567890',
-    name: 'Real Person',
-    firstName: 'Real',
-    lastName: 'Person',
     organisationId: '1234567',
     sbi: '107183280',
     organisationName: 'Farms Ltd',
@@ -269,19 +266,6 @@ describe('auth routes', () => {
       })
       const cache = await server.app.cache.get(credentials.profile.sessionId)
       expect(cache.name).toBe('User')
-    })
-
-    test('should not store the real name from the token in session cache', async () => {
-      await server.inject({
-        url: path,
-        auth: {
-          strategy: 'defra-id',
-          credentials
-        }
-      })
-      const cache = await server.app.cache.get(credentials.profile.sessionId)
-      expect(cache.firstName).toBeUndefined()
-      expect(cache.lastName).toBeUndefined()
     })
 
     test('should set user permissions in session cache', async () => {

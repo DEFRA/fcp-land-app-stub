@@ -35,7 +35,7 @@ export const authRoutes = [{
       return h.view('unauthorised')
     }
 
-    const { profile: { firstName: _firstName, lastName: _lastName, ...profile }, token, refreshToken } = request.auth.credentials
+    const { profile, token, refreshToken } = request.auth.credentials
     // verify token returned from Defra Identity against public key
     await verifyToken(token)
 
