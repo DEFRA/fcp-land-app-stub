@@ -39,6 +39,8 @@ const credentials = {
     sessionId: 'session-id',
     crn: '1234567890',
     name: 'Real Person',
+    firstName: 'Real',
+    lastName: 'Person',
     organisationId: '1234567',
     sbi: '107183280',
     organisationName: 'Farms Ltd',
@@ -256,7 +258,7 @@ describe('auth routes', () => {
       expect(cache.name).toBe('Fake Middle Name')
     })
 
-    test.each([null, { name: null }, { name: { first: null, middle: null, last: null } }])('should fall back to the token name when personal details are %j', async (details) => {
+    test.each([null, { name: null }, { name: { first: null, middle: null, last: null } }])('should fall back to User when personal details are %j', async (details) => {
       mockGetPersonalDetails.mockResolvedValueOnce(details)
       await server.inject({
         url: path,
@@ -266,7 +268,20 @@ describe('auth routes', () => {
         }
       })
       const cache = await server.app.cache.get(credentials.profile.sessionId)
-      expect(cache.name).toBe(credentials.profile.name)
+      expect(cache.name).toBe('User')
+    })
+
+    test('should not store the real name from the token in session cache', async () => {
+      await server.inject({
+        url: path,
+        auth: {
+          strategy: 'defra-id',
+          credentials
+        }
+      })
+      const cache = await server.app.cache.get(credentials.profile.sessionId)
+      expect(cache.firstName).toBeUndefined()
+      expect(cache.lastName).toBeUndefined()
     })
 
     test('should set user permissions in session cache', async () => {

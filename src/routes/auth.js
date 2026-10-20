@@ -5,6 +5,8 @@ import { validateState } from '../auth/state.js'
 import { verifyToken } from '../auth/verify-token.js'
 import { getSafeRedirect } from '../utils/get-safe-redirect.js'
 
+const FALLBACK_NAME = 'User'
+
 function formatName (name) {
   const fullName = [name?.first, name?.middle, name?.last].filter(Boolean).join(' ')
   return fullName || null
@@ -33,7 +35,7 @@ export const authRoutes = [{
       return h.view('unauthorised')
     }
 
-    const { profile, token, refreshToken } = request.auth.credentials
+    const { profile: { firstName: _firstName, lastName: _lastName, ...profile }, token, refreshToken } = request.auth.credentials
     // verify token returned from Defra Identity against public key
     await verifyToken(token)
 
@@ -43,9 +45,9 @@ export const authRoutes = [{
     // These calls are authenticated using the token returned from Defra Identity
     const { scope } = await getPermissions(profile.sbi, profile.crn, token)
 
-    // The external API sanitizes personal data, so use its name in place of the one from the token
+    // The external API sanitizes personal data, so the real name from the token is never stored or shown
     const personalDetails = await getPersonalDetails(profile.crn, token)
-    const name = formatName(personalDetails?.name) ?? profile.name
+    const name = formatName(personalDetails?.name) ?? FALLBACK_NAME
 
     // Store token and all useful data in the session cache
     await request.server.app.cache.set(profile.sessionId, {
