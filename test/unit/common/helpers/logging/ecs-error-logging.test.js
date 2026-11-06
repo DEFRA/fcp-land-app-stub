@@ -21,14 +21,14 @@ function logWith (fields) {
 
 describe('ECS error logging', () => {
   test('should output the ECS error fields when the error is logged under err', () => {
-    const entry = logWith({ err: new Error('External API request failed'), crn: '1102634220' })
+    const entry = logWith({ err: new Error('External API request failed'), crn: '1234567890' })
 
     expect(entry.error).toEqual({
       type: 'Error',
       message: 'External API request failed',
       stack_trace: expect.stringContaining('External API request failed')
     })
-    expect(entry.crn).toBe('1102634220')
+    expect(entry.crn).toBe('1234567890')
   })
 
   test('should lose the error details when the error is logged under error', () => {

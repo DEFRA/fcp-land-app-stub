@@ -75,7 +75,7 @@ describe('getBellOptions', () => {
         firstName: 'Andrew',
         lastName: 'Farmer',
         email: 'andrew.farmer@example.com',
-        relationships: ['1234567:107183280:Farms Ltd:1:External:0'],
+        relationships: ['1234567:123456789:Farms Ltd:1:External:0'],
         roles: ['1234567:Agent:3']
       }, { key: 'a-secret', algorithm: 'HS256' })
 
@@ -87,7 +87,7 @@ describe('getBellOptions', () => {
       expect(credentials.profile).not.toHaveProperty('firstName')
       expect(credentials.profile).not.toHaveProperty('lastName')
       expect(credentials.profile).not.toHaveProperty('email')
-      expect(credentials.profile.sbi).toBe('107183280')
+      expect(credentials.profile.sbi).toBe('123456789')
       expect(credentials.profile.organisationName).toBe('Farms Ltd')
       expect(credentials.profile.role).toBe('Agent')
     })

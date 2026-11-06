@@ -21,7 +21,7 @@ const credentials = {
   sessionId: 'personal-details-edit-session-id',
   crn: '1234567890',
   organisationId: '1234567',
-  sbi: '107183280',
+  sbi: '123456789',
   name: 'Andrew Farmer',
   organisationName: 'Farms Ltd',
   role: 'Agent',
