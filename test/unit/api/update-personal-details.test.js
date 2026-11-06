@@ -20,9 +20,14 @@ describe('updatePersonalDetails', () => {
     expect(await updatePersonalDetails(input, token)).toBe(true)
   })
 
-  test('should return false when the mutation reports failure', async () => {
+  test('should throw when the mutation reports failure', async () => {
     mockQuery.mockResolvedValue({ updateCustomerAllFields: { success: false } })
-    expect(await updatePersonalDetails(input, token)).toBe(false)
+    await expect(updatePersonalDetails(input, token)).rejects.toThrow('not report the personal details update as successful')
+  })
+
+  test('should throw when the mutation returns no result', async () => {
+    mockQuery.mockResolvedValue({ updateCustomerAllFields: null })
+    await expect(updatePersonalDetails(input, token)).rejects.toThrow('not report the personal details update as successful')
   })
 
   test('should propagate errors from the external api', async () => {
