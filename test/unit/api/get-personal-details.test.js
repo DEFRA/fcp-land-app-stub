@@ -10,7 +10,7 @@ vi.mock('../../../src/common/helpers/logging/logger.js', () => ({
 
 const { getPersonalDetails } = await import('../../../src/api/get-personal-details.js')
 
-const crn = '1102634220'
+const crn = '1234567890'
 const token = 'DEFRA-ID-JWT'
 
 const personData = {

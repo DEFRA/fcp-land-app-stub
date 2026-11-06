@@ -2,9 +2,9 @@ import { findClaimForOrganisation } from '../../../src/auth/find-claim-for-organ
 
 describe('findClaimForOrganisation', () => {
   test('should return the matching entry split on colons', () => {
-    const claim = ['5900001:110100101:Farms Ltd:1:External:0']
+    const claim = ['5900001:123456789:Farms Ltd:1:External:0']
     const result = findClaimForOrganisation('5900001', claim)
-    expect(result).toEqual(['5900001', '110100101', 'Farms Ltd', '1', 'External', '0'])
+    expect(result).toEqual(['5900001', '123456789', 'Farms Ltd', '1', 'External', '0'])
   })
 
   test('should pick the matching entry out of a cumulative multi-organisation array', () => {

@@ -6,7 +6,7 @@ vi.mock('../../../src/api/query.js', () => ({
 const { updatePersonalDetails } = await import('../../../src/api/update-personal-details.js')
 
 const token = 'DEFRA-ID-JWT'
-const input = { crn: '1102634220', first: 'James' }
+const input = { crn: '1234567890', first: 'James' }
 
 describe('updatePersonalDetails', () => {
   test('should call the external api with the input and user token', async () => {

@@ -703,7 +703,7 @@ the mutation's input type:
 ```js
 // UpdateCustomerAllFields (personal details)
 {
-  crn: '1102634220',            // from the session, never the form
+  crn: '1234567890',            // from the session, never the form
   first: 'Jane',
   middle: null,
   last: 'Smith',
@@ -715,11 +715,11 @@ the mutation's input type:
 
 // UpdateBusinessAllFields (business details)
 {
-  sbi: '107183280',             // from the session, never the form
+  sbi: '123456789',             // from the session, never the form
   name: 'Smith Farms',
   phone: { landline: '01632 960002', mobile: null },
   email: { address: 'office@example.com' },
-  vat: '123456789',             // nine digits, no GB prefix, or null
+  vat: '987654321',             // nine digits, no GB prefix, or null
   address: { withoutUprn: { line1, line2, line3, line4, city, postalCode, country, ... } }
 }
 ```

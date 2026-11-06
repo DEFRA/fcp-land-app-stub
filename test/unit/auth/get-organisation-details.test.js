@@ -2,24 +2,24 @@ import { getOrganisationDetails } from '../../../src/auth/get-organisation-detai
 
 describe('getOrganisationDetails', () => {
   test('should return the sbi, organisation name and role for the matching organisation', () => {
-    const relationships = ['5900001:110100101:Farms Ltd:1:External:0']
+    const relationships = ['5900001:100000001:Farms Ltd:1:External:0']
     const roles = ['5900001:Agent:3']
     const result = getOrganisationDetails('5900001', relationships, roles)
-    expect(result).toEqual({ sbi: '110100101', organisationName: 'Farms Ltd', role: 'Agent' })
+    expect(result).toEqual({ sbi: '100000001', organisationName: 'Farms Ltd', role: 'Agent' })
   })
 
   test('should pick the matching entry out of a cumulative multi-organisation array', () => {
     const relationships = [
-      '5900001:110100101:Farms Ltd:1:External:0',
-      '5900002:110100102:Andrew Farmer:1:External:0'
+      '5900001:100000001:Farms Ltd:1:External:0',
+      '5900002:100000002:Andrew Farmer:1:External:0'
     ]
     const roles = ['5900001:Agent:3', '5900002:Agent:3']
     const result = getOrganisationDetails('5900002', relationships, roles)
-    expect(result).toEqual({ sbi: '110100102', organisationName: 'Andrew Farmer', role: 'Agent' })
+    expect(result).toEqual({ sbi: '100000002', organisationName: 'Andrew Farmer', role: 'Agent' })
   })
 
   test('should keep a colon in the organisation name intact', () => {
-    const relationships = ['5900001:110100101:Acme: Holdings Ltd:1:External:0']
+    const relationships = ['5900001:100000001:Acme: Holdings Ltd:1:External:0']
     const result = getOrganisationDetails('5900001', relationships, [])
     expect(result.organisationName).toBe('Acme: Holdings Ltd')
   })
@@ -31,13 +31,13 @@ describe('getOrganisationDetails', () => {
   })
 
   test('should return nulls when no relationship matches the organisation id', () => {
-    const relationships = ['5900001:110100101:Farms Ltd:1:External:0']
+    const relationships = ['5900001:100000001:Farms Ltd:1:External:0']
     const result = getOrganisationDetails('9999999', relationships, [])
     expect(result).toEqual({ sbi: null, organisationName: null, role: null })
   })
 
   test('should return a null role when no role matches the organisation id', () => {
-    const relationships = ['5900001:110100101:Farms Ltd:1:External:0']
+    const relationships = ['5900001:100000001:Farms Ltd:1:External:0']
     const roles = ['9999999:Agent:3']
     const result = getOrganisationDetails('5900001', relationships, roles)
     expect(result.role).toBeNull()

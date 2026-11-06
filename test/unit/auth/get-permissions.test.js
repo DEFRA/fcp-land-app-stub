@@ -10,8 +10,8 @@ vi.mock('../../../src/common/helpers/logging/logger.js', () => ({
 
 const { getPermissions } = await import('../../../src/auth/get-permissions.js')
 
-const sbi = '107183280'
-const crn = '1102634220'
+const sbi = '123456789'
+const crn = '1234567890'
 const token = 'DEFRA-ID-JWT'
 
 const businessData = {

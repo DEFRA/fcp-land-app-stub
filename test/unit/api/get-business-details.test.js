@@ -10,7 +10,7 @@ vi.mock('../../../src/common/helpers/logging/logger.js', () => ({
 
 const { getBusinessDetails } = await import('../../../src/api/get-business-details.js')
 
-const sbi = '107183280'
+const sbi = '123456789'
 const token = 'DEFRA-ID-JWT'
 
 const businessData = {
@@ -20,7 +20,7 @@ const businessData = {
     countyParishHoldings: [{ cphNumber: '10/123/4567' }],
     info: {
       name: 'Henderson Family Farms',
-      vat: 'GB123456789',
+      vat: 'GB987654321',
       traderNumber: '010203040506',
       vendorNumber: '694523',
       legalStatus: { code: '102111', type: 'Sole Proprietorship' },
