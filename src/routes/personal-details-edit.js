@@ -56,6 +56,7 @@ const getPersonalDetailsEdit = {
   method: 'GET',
   path: '/personal-details/edit',
   options: {
+    // A user's own personal details need no permission beyond being signed in
     auth: { scope: ['user'] }
   },
   handler: async (request, h) => {
@@ -69,6 +70,7 @@ const getPersonalDetailsEdit = {
     const formValues = toFormValues(personalDetails)
     const { isValid } = validatePersonalDetails(formValues)
 
+    // Stored data the form would reject can't be saved back without the user changing fields they didn't touch
     if (!isValid) {
       return h.view('personal-details-edit', { cannotUpdate: true })
     }

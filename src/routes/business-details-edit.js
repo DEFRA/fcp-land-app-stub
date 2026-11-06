@@ -40,6 +40,7 @@ function toUpdateInput (sbi, payload) {
     },
     email: { address: payload.businessEmail },
     vat: payload.vatNumber || null,
+    // The business address is a one-of: withUprn (from a postcode lookup) or withoutUprn (entered manually)
     address: { withoutUprn: buildManualAddress(payload) }
   }
 }
@@ -48,6 +49,7 @@ const getBusinessDetailsEdit = {
   method: 'GET',
   path: '/business-details/edit',
   options: {
+    // Users without this scope get a 403
     auth: { scope: FULL_PERMISSIONS }
   },
   handler: async (request, h) => {
@@ -61,6 +63,7 @@ const getBusinessDetailsEdit = {
     const formValues = toFormValues(businessDetails)
     const { isValid } = validateBusinessDetails(formValues)
 
+    // Stored data the form would reject can't be saved back without the user changing fields they didn't touch
     if (!isValid) {
       return h.view('business-details-edit', { cannotUpdate: true })
     }

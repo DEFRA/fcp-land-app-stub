@@ -11,6 +11,7 @@ export const home = {
   handler: async (request, h) => {
     const { crn, sbi, scope, token } = request.auth.credentials
     // Personal details need no extra scope, business details need BUSINESS_DETAILS:VIEW or above
+    // Checked here rather than in the route's auth.scope, which would return a 403 for the whole page
     const hasBusinessAccess = scope.some((permission) => VIEW_PERMISSIONS.includes(permission))
     const canEditBusiness = scope.some((permission) => FULL_PERMISSIONS.includes(permission))
 

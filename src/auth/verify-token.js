@@ -11,10 +11,12 @@ async function verifyToken (token) {
   })
   const { keys } = payload
 
+  // Uses the first key only: a production service should pick the key matching the token's `kid` header, as keys rotate
   // Convert the JSON Web Key (JWK) to a PEM-encoded public key so that it can be used to verify the token
   const pem = createPublicKey({ key: keys[0], format: 'jwk' }).export({ type: 'spki', format: 'pem' })
 
   // Check that the token is signed with the appropriate key by decoding it and verifying the signature using the public key
+  // Only the signature is checked here, not the issuer (iss) or audience (aud) claims
   const decoded = Jwt.token.decode(token)
   Jwt.token.verify(decoded, { key: pem, algorithm: 'RS256' })
 }

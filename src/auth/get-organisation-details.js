@@ -14,7 +14,7 @@ const TRAILING_FIELD_COUNT = 3
  * 3 complete/approved, 4 complete/rejected, 5 pending appeal, 6 removed, 7 locked.
  * Only 3 grants access, but the role name here is purely informational (Land App
  * authorisation is driven entirely by the scope built from permission groups), so
- * this deliberately does not filter on status - doing so would silently turn a
+ * this deliberately does not filter on status: doing so would silently turn a
  * valid display value into null.
  */
 function getOrganisationDetails (organisationId, relationships, roles) {

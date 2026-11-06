@@ -12,6 +12,7 @@ async function getSignOutUrl (request, token) {
 
   const query = [
     `post_logout_redirect_uri=${config.get('defraId.signOutRedirectUrl')}`,
+    // Tells Defra Identity whose session to end
     `id_token_hint=${token}`,
     `state=${state}`
   ].join('&')

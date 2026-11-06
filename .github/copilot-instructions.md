@@ -30,13 +30,14 @@ GOV.UK Design System. It uses [Bulma](https://bulma.io/) instead.
 src/
   index.js               # Entry point
   server.js              # Hapi server setup, plugin registration, cache config
-  api/                   # GraphQL client and Cognito token helper for the external API
+  api/                   # GraphQL client, Cognito token helper, read/update functions and query documents
   auth/                  # Defra Identity helpers (OIDC discovery, tokens, state, permissions)
-  constants/scope/       # Permission level scope constants (eg LAND_DETAILS:AMEND)
+  constants/             # Scope constants (eg BUSINESS_DETAILS:FULL_PERMISSION), validation limits, patterns
   common/helpers/        # CDP plumbing (logging, tracing, pulse, secure context, proxy, errors)
   config/                # Convict schemas plus Nunjucks setup
   plugins/               # Hapi plugins (auth, session, sso, router, CSP, headers)
-  routes/                # Route definitions
+  routes/                # Route definitions, including the personal and business details edit routes
+  validation/            # Joi schemas and helpers for the edit forms
   views/                 # Nunjucks templates (Bulma markup)
   client/                # Client-side SCSS, JS and images
   utils/                 # Small helpers (safe redirect)
@@ -90,17 +91,21 @@ npm run test:watch        # TDD watch mode
 
 Integration tests use `server.inject()` and `server.initialize()` (never `server.start()`).
 They mock the OpenID Connect discovery document through
-`test/integration/helpers/setup-server-mocks.js`.
+`test/integration/helpers/setup-server-mocks.js`, and mock the `src/api/` and `src/auth/`
+helpers that call Defra Identity or the external API.
 
 ## Defra Identity patterns
 
 These are the patterns third parties are expected to copy. Preserve the explanatory
-comments in `src/auth/**` and `src/plugins/auth.js`: they are the documentation.
+comments in `src/auth/**`, `src/plugins/auth.js`, `src/routes/**` and `src/api/**`: they
+are the documentation, alongside the README.
 
-- **Two strategies.** `defra-id` (Bell) is used only for sign in, change organisation and
-  sign out. `session` (Cookie) is the default for everything else.
-- **Discovery.** `getOidcConfig()` fetches the well known endpoint once at plugin
-  registration and provides the authorisation, token, JWKS and end session URLs.
+- **Two strategies.** `defra-id` (Bell) is used only for `/auth/sign-in`,
+  `/auth/sign-in-oidc` and `/auth/organisation`. `session` (Cookie) is the default for
+  everything else. The sign out routes use `session` in `try` mode.
+- **Discovery.** `getOidcConfig()` fetches the well known endpoint. It is not cached: the
+  auth plugin calls it at registration, and `verifyToken`, `refreshTokens` and
+  `getSignOutUrl` call it again each time they run.
 - **Token verification.** `verifyToken()` converts the JWK from the JWKS endpoint into a
   PEM and verifies the RS256 signature.
 - **Enriching the session.** SBI, organisation name and role need no API call: they're
@@ -108,7 +113,9 @@ comments in `src/auth/**` and `src/plugins/auth.js`: they are the documentation.
   `get-organisation-details.js`. Permissions do need
   a call: `getPermissions()` queries the FCP third party external API
   (`src/api/query.js`) and maps the response into a Hapi `scope` array. If that call
-  fails, it falls back to the minimum scope rather than blocking sign in.
+  fails, it falls back to the minimum scope rather than blocking sign in. The Bell
+  `profile` function discards the token's `firstName`, `lastName` and `email`; the
+  displayed name comes from `getPersonalDetails()`.
 - **State.** `createState()` / `validateState()` guard the sign out redirect against CSRF.
 - **Refresh.** `refreshTokens()` is called from the cookie strategy's `validate()` when the
   access token has expired. Defra Identity refresh tokens are single use.
@@ -120,6 +127,21 @@ comments in `src/auth/**` and `src/plugins/auth.js`: they are the documentation.
 - **Cognito.** `src/api/get-cognito-token.js` is the optional machine-to-machine
   authentication layer in front of the external API, toggled by `COGNITO_ENABLED`
   (default `false`, which is what local development uses).
+
+## Reading and writing data
+
+- **Reads.** `getPersonalDetails()` and `getBusinessDetails()` call `query()` and return
+  `null` on any failure, so a page can still render.
+- **Writes.** `updatePersonalDetails()` and `updateBusinessDetails()` throw on any failure,
+  including a result without `success: true`, so the route shows `updateFailed`.
+- **Identifiers.** Always take `crn` and `sbi` from `request.auth.credentials`, never from
+  the request.
+- **Scope.** Business details need `VIEW_PERMISSIONS` to view and `FULL_PERMISSIONS` to
+  edit (`src/constants/scope/business-details.js`). Personal details only need `user`.
+- **Edit routes.** GET validates the stored data with the same schemas as POST and shows
+  `cannotUpdate` if it fails. `toUpdateInput()` maps form fields to the mutation input;
+  the business address is wrapped in `withoutUprn`, and `buildManualAddress()` writes the
+  county into `line4`.
 
 ## Common gotchas
 

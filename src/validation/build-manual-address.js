@@ -1,8 +1,7 @@
-// Builds a manual (non-lookup) DAL address input from our edit form's field names.
-// Mirrors fcp-sfd-frontend-engine's buildManualAddress mapping exactly: lookup-only
-// fields are always null, and the form's "county" value is written into the DAL's
-// line4 field rather than its own county field (the DAL's county field is unused
-// for manual entry).
+// Builds a manual (non-lookup) address input from the edit form's field names, the same
+// way Defra's own services do so records look alike whoever edits them: lookup-only
+// fields are always null, and the form's "county" value is written into line4 rather
+// than the county field (which is unused for manual entry).
 export function buildManualAddress (form) {
   return {
     pafOrganisationName: null,

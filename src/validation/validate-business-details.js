@@ -6,7 +6,7 @@ import { addressSchema } from './shared/address-schema.js'
 
 const schemas = [businessNameSchema, businessPhoneSchema, businessEmailSchema, businessVatSchema, addressSchema]
 
-// Validates each schema independently (not combined into one Joi schema) - same
+// Validates each schema independently (not combined into one Joi schema), the same
 // technique as validatePersonalDetails. Used both to check the currently stored data
 // on GET, and to validate the submitted form on POST.
 export function validateBusinessDetails (payload) {

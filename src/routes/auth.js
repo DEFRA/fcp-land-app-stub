@@ -19,6 +19,7 @@ export const authRoutes = [{
     auth: 'defra-id'
   },
   handler: function (_request, h) {
+    // Bell redirects unauthenticated users to Defra Identity before this handler runs
     return h.redirect('/home')
   }
 }, {
@@ -28,7 +29,7 @@ export const authRoutes = [{
     auth: { strategy: 'defra-id', mode: 'try' }
   },
   handler: async function (request, h) {
-    // If the user is not authenticated, redirect to the home page
+    // If the user is not authenticated, show the unauthorised page
     // This should only occur if the user tries to access the sign-in page directly and not part of the sign-in flow
     // eg if the user has bookmarked the Defra Identity sign-in page or they have signed out and tried to go back in the browser
     if (!request.auth.isAuthenticated) {
@@ -39,13 +40,11 @@ export const authRoutes = [{
     // verify token returned from Defra Identity against public key
     await verifyToken(token)
 
-    // Typically permissions for the selected organisation would be available in the `roles` property of the token
-    // However, when signing in with RPA credentials, the roles only include the role name and not the permissions
-    // Therefore, we need to make additional API calls to get the permissions from Siti Agri
-    // These calls are authenticated using the token returned from Defra Identity
+    // The token's roles claim carries role names but not permissions, so permissions come from the
+    // FCP third party external API, authenticated with the Defra Identity token just verified
     const { scope } = await getPermissions(profile.sbi, profile.crn, token)
 
-    // The external API sanitizes personal data, so the real name from the token is never stored or shown
+    // The displayed name comes from the external API's customer record, not the token (see the Bell profile function)
     const personalDetails = await getPersonalDetails(profile.crn, token)
     const name = formatName(personalDetails?.name) ?? FALLBACK_NAME
 

@@ -7,7 +7,7 @@ import { addressSchema } from './shared/address-schema.js'
 const schemas = [personalNameSchema, personalDobSchema, personalPhoneSchema, personalEmailSchema, addressSchema]
 
 // Validates each schema independently (not combined into one Joi schema) so that
-// custom validation logic - like the date of birth schema's real-date check - always
+// custom validation logic (like the date of birth schema's real-date check) always
 // runs, even when another section of the payload is also invalid. Used both to check
 // the currently stored data on GET, and to validate the submitted form on POST.
 export function validatePersonalDetails (payload) {

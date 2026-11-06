@@ -12,13 +12,13 @@ export const auth = {
       const oidcConfig = await getOidcConfig()
 
       // Bell is a third-party plugin that provides a common interface for OAuth 2.0 authentication
-      // Used to authenticate users with Defra Identity and a pre-requisite for the Cookie authentication strategy
-      // Also used for changing organisations and signing out
+      // Used only to sign in with Defra Identity and to change organisation, which creates the session the Cookie strategy relies on
+      // Sign out does not use Bell: it uses the session strategy and redirects to Defra Identity itself
       server.auth.strategy('defra-id', 'bell', getBellOptions(oidcConfig))
 
-      // Cookie is a built-in authentication strategy for hapi.js that authenticates users based on a session cookie
+      // Cookie is a hapi.js plugin that authenticates users based on a session cookie
       // Used for all non-Defra Identity routes
-      // Lax policy required to allow redirection after Defra Identity sign out
+      // Lax policy required so the cookie is sent on the top-level redirects back from Defra Identity
       server.auth.strategy('session', 'cookie', getCookieOptions())
 
       // Set the default authentication strategy to session
@@ -36,6 +36,7 @@ function getBellOptions (oidcConfig) {
       useParamsAuth: true,
       auth: oidcConfig.authorization_endpoint,
       token: oidcConfig.token_endpoint,
+      // offline_access returns a refresh token; the client ID scope makes Defra Identity issue an access token for this service
       scope: ['openid', 'offline_access', config.get('defraId.clientId')],
       profile: function (credentials, _params, _get) {
         // Personal details are sanitised by the external API, so the real name and email
@@ -44,7 +45,7 @@ function getBellOptions (oidcConfig) {
 
         // sbi, organisationName and role aren't separate claims: they're embedded
         // in the relationships and roles entries for the currently selected
-        // organisation - see getPermissions for why role carries no permissions
+        // organisation. Role carries no permissions: see the /auth/sign-in-oidc route
         const { sbi, organisationName, role } = getOrganisationDetails(payload.currentRelationshipId, payload.relationships ?? [], payload.roles ?? [])
 
         // Map all JWT properties to the credentials object so it can be stored in the session
@@ -74,6 +75,7 @@ function getBellOptions (oidcConfig) {
       return config.get('defraId.redirectUrl')
     },
     providerParams: function (request) {
+      // serviceId and p (the policy) are issued at Defra Identity onboarding and select your service's sign in journey
       const params = {
         serviceId: config.get('defraId.serviceId'),
         p: config.get('defraId.policy'),
@@ -122,6 +124,7 @@ function getCookieOptions () {
         if (!config.get('defraId.refreshTokens')) {
           return { isValid: false }
         }
+        // Refresh tokens are single use, so the new pair must replace the old one in the cache
         const { access_token: token, refresh_token: refreshToken } = await refreshTokens(userSession.refreshToken)
         userSession.token = token
         userSession.refreshToken = refreshToken
