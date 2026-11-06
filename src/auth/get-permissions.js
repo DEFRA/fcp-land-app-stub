@@ -28,7 +28,7 @@ async function getPermissions (sbi, crn, token) {
     return mapPermissions(data)
   } catch (error) {
     // The external API being unreachable, or the user having no relationship with this
-    // SBI/CRN, should not block sign in - it just means they see the minimum permission set
+    // SBI/CRN, should not block sign in: it just means they see the minimum permission set
     logger.warn({ err: error, user: { id: crn } }, `Failed to get permissions from the external API for SBI ${sbi}, falling back to default scope`)
 
     return { scope: [DEFAULT_SCOPE] }
@@ -46,7 +46,7 @@ function mapPermissions (data) {
 
   if (!permissionGroups) {
     // business is null for an unknown SBI, customer is null when the user has no
-    // relationship with this business - both are valid responses, not errors
+    // relationship with this business: both are valid responses, not errors
     return { scope: [DEFAULT_SCOPE] }
   }
 

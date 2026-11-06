@@ -7,9 +7,8 @@ import {
   COUNTRY_MAX
 } from '../../constants/validation-fields.js'
 
-// Field names match fcp-land-app-stub's own address field naming (line1-3/postalCode,
-// as already used for read-only display on /home) rather than fcp-sfd-frontend's
-// address1-3/postcode form field names - the validation rules themselves are unchanged.
+// Field names match the external API's address fields (line1-3, city, postalCode, country), with
+// county mapped to line4 on save (see buildManualAddress).
 export const addressSchema = Joi.object({
   line1: Joi.string()
     .trim()

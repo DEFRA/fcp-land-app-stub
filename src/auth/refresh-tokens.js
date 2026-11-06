@@ -5,6 +5,8 @@ import { config } from '../config/config.js'
 async function refreshTokens (refreshToken) {
   const { token_endpoint: url } = await getOidcConfig()
 
+  // Bell only handles the initial code exchange, so the refresh_token grant is called directly
+  // Sending these in the form body rather than the URL would keep the client secret out of proxy and access logs
   const query = [
     `client_id=${config.get('defraId.clientId')}`,
     `client_secret=${config.get('defraId.clientSecret')}`,
