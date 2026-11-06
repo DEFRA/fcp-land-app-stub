@@ -1,7 +1,7 @@
 {
   "name": "fcp-land-app-stub",
   "version": "0.0.0",
-  "description": "Stub third party application demonstrating Defra Identity integration for The Land App",
+  "description": "Stub third party application demonstrating Defra Identity integration for any third party",
   "sideEffects": false,
   "main": "src/index.js",
   "type": "module",

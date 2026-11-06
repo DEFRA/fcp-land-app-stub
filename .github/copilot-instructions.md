@@ -1,11 +1,10 @@
-# FCP Land App Stub - AI Coding Agent Instructions
+# Third Party Demo App (fcp-land-app-stub) - AI Coding Agent Instructions
 
 ## Overview
 
-A stub of [The Land App](https://thelandapp.com/), a third party land management and
-mapping service. It exists to show the Land App team (and other third parties) how to
-integrate with Defra Identity, using the same patterns as
-[fcp-defra-id-example](../fcp-defra-id-example).
+A stub third party service. It exists to show any third party that needs to integrate
+with Defra farming data how to use Defra Identity and the FCP third party external API,
+using the same patterns as [fcp-defra-id-example](../fcp-defra-id-example).
 
 Because it represents a **third party** service, it deliberately does **not** use the
 GOV.UK Design System. It uses [Bulma](https://bulma.io/) instead.

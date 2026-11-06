@@ -1,31 +1,30 @@
 @use "bulma/sass";
 
-// Approximation of The Land App palette. Bulma 1.x derives every shade from the
-// hue/saturation/lightness custom properties, so overriding these three recolours
-// the whole component set.
+// Bulma 1.x derives every shade from the hue/saturation/lightness custom
+// properties, so overriding these recolours the whole component set.
 :root {
-  --bulma-primary-h: 140deg;
+  --bulma-primary-h: 220deg;
   --bulma-primary-s: 60%;
-  --bulma-primary-l: 30%;
+  --bulma-primary-l: 40%;
   --bulma-primary-invert-l: 100%;
-  --bulma-link-h: 140deg;
+  --bulma-link-h: 220deg;
   --bulma-link-s: 60%;
-  --bulma-link-l: 30%;
+  --bulma-link-l: 40%;
   --bulma-link-invert-l: 100%;
-  --bulma-scheme-h: 140;
+  --bulma-scheme-h: 220;
   --bulma-scheme-s: 8%;
 }
 
-.land-app-navbar {
+.demo-app-navbar {
   border-bottom: 1px solid var(--bulma-border);
 }
 
-.land-app-brand {
+.demo-app-brand {
   font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-.land-app-stub-banner {
+.demo-app-stub-banner {
   background: var(--bulma-warning-95);
   border-bottom: 1px solid var(--bulma-warning-70);
   padding: 0.5rem 0;
