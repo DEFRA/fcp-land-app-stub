@@ -1,4 +1,4 @@
-# Third Party Demo App (fcp-land-app-stub)
+# Third Party Demo App
 
 A stub third party service that shows how any third party integrates with
 **Defra Identity** and the **FCP third party external API**.
