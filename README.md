@@ -792,7 +792,7 @@ further:
 
 ### Running it locally
 
-Prerequisites: Node.js 24+ (use `nvm`) and Docker.
+Prerequisites: Node.js 26+ (use `nvm`) and Docker.
 
 ```bash
 nvm use

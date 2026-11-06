@@ -12,7 +12,7 @@ GOV.UK Design System. It uses [Bulma](https://bulma.io/) instead.
 ## Architecture
 
 ### Core technology stack
-- **Runtime:** Node.js 24+ with ES modules (`"type": "module"`)
+- **Runtime:** Node.js 26+ with ES modules (`"type": "module"`)
 - **Framework:** Hapi.js 21 for HTTP server
 - **Templates:** Nunjucks for server-side rendering
 - **Styling:** Bulma, compiled from SCSS (self-hosted, never a CDN)
