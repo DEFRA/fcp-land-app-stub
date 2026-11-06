@@ -22,7 +22,7 @@ export const config = convict({
   serviceName: {
     doc: 'Applications Service Name',
     format: String,
-    default: 'Land App'
+    default: 'Third Party Demo App'
   },
   root: {
     doc: 'Project root',

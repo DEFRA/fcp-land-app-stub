@@ -1,12 +1,10 @@
-# fcp-land-app-stub
+# Third Party Demo App (fcp-land-app-stub)
 
-A stub of [The Land App](https://thelandapp.com/) that shows how a third party service
-integrates with **Defra Identity** and the **FCP third party external API**.
+A stub third party service that shows how any third party integrates with
+**Defra Identity** and the **FCP third party external API**.
 
-The Land App is a commercial land management and mapping service used by farmers and
-land agents. This repository is not the Land App: it is a deliberately small, readable
-stand-in that the Land App team (and any other third party) can use as a working
-reference. It shows how to:
+This repository is a deliberately small, readable stand-in that any third party can use
+as a working reference. It shows how to:
 
 1. **Sign a user in** with Defra Identity and keep them signed in.
 2. **Work out what they're allowed to do** for the business they've chosen to act for.
@@ -72,7 +70,7 @@ Design System.
 ```mermaid
 flowchart LR
     U["User's browser"]
-    subgraph LA ["Land App (this stub)"]
+    subgraph LA ["Third party service (this stub)"]
         A["Web server"]
         R[("Redis<br/>sessions")]
     end
@@ -94,13 +92,13 @@ flowchart LR
     X --> RP
 ```
 
-The Land App talks to two Defra systems:
+A third party service talks to two Defra systems:
 
 - **Defra Identity** signs the user in. The browser is redirected there and back, and the
-  Land App's server talks to it directly to exchange codes for tokens.
-- The **FCP third party external API** is how the Land App reads and updates Rural
+  service's server talks to it directly to exchange codes for tokens.
+- The **FCP third party external API** is how the service reads and updates Rural
   Payments data. It sits behind an API gateway on Defra's hosting platform. In deployed
-  environments the gateway expects an AWS Cognito token that identifies the Land App
+  environments the gateway expects an AWS Cognito token that identifies the service
   itself.
 
 To integrate for real you need three sets of values from Defra:
@@ -109,7 +107,7 @@ To integrate for real you need three sets of values from Defra:
 |---|---|---|
 | A Defra Identity client: client ID, client secret, service ID, policy, redirect URIs | Defra Identity onboarding | Signing users in |
 | The external API URL | Defra | Reading permissions and data |
-| A Cognito client ID, client secret and domain | The CDP platform team | Authenticating the Land App to the API gateway (deployed environments only) |
+| A Cognito client ID, client secret and domain | The CDP platform team | Authenticating the third party service to the API gateway (deployed environments only) |
 
 Locally, [fcp-defra-id-stub](https://github.com/DEFRA/fcp-defra-id-stub) stands in for
 Defra Identity, a local checkout of
@@ -205,7 +203,7 @@ token. The rest (permissions and the person's name) comes from the
 sequenceDiagram
     autonumber
     participant U as Browser
-    participant A as Land App stub
+    participant A as Third party stub
     participant D as Defra Identity
     participant X as External API
     participant R as Redis
@@ -333,7 +331,7 @@ authorisation decisions use [permissions](#part-2-permissions), not roles.
 ```mermaid
 sequenceDiagram
     participant U as Browser
-    participant A as Land App stub
+    participant A as Third party stub
     participant R as Redis
     participant D as Defra Identity
 
@@ -384,7 +382,7 @@ arrive from another Defra service that already knows which business they're work
 ```mermaid
 sequenceDiagram
     participant U as Browser
-    participant A as Land App stub
+    participant A as Third party stub
     participant D as Defra Identity
 
     opt Arriving from another Defra service
@@ -418,7 +416,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant U as Browser
-    participant A as Land App stub
+    participant A as Third party stub
     participant R as Redis
     participant D as Defra Identity
 
@@ -566,13 +564,13 @@ service account.
 ### Machine-to-machine authentication with Cognito
 
 In deployed environments, CDP puts an API gateway in front of the external API. The
-gateway requires an AWS Cognito access token, which the Land App gets using the OAuth 2.0
+gateway requires an AWS Cognito access token, which the third party service gets using the OAuth 2.0
 client credentials grant (a service signing in as itself with a client ID and secret).
 This is separate from, and in addition to, the user's Defra Identity token.
 
 ```mermaid
 sequenceDiagram
-    participant A as Land App stub
+    participant A as Third party stub
     participant C as AWS Cognito
     participant G as CDP API gateway
     participant E as fcp-tp-external-api
@@ -630,7 +628,7 @@ they chose at sign in.
 ```mermaid
 sequenceDiagram
     participant U as Browser
-    participant A as Land App stub
+    participant A as Third party stub
     participant X as External API
 
     U->>A: GET /home
@@ -662,7 +660,7 @@ Both edit journeys follow the same pattern. This is the business one:
 ```mermaid
 sequenceDiagram
     participant U as Browser
-    participant A as Land App stub
+    participant A as Third party stub
     participant X as External API
 
     U->>A: GET /business-details/edit

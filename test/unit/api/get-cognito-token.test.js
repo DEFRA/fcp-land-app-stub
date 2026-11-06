@@ -13,7 +13,7 @@ const { getAccessToken, clearCachedToken } = await import('../../../src/api/get-
 
 const configValues = {
   'cognito.enabled': true,
-  'cognito.domain': 'land-app-c63f2.auth.eu-west-2.amazoncognito.com',
+  'cognito.domain': 'third-party-demo-app-c63f2.auth.eu-west-2.amazoncognito.com',
   'cognito.clientId': 'mock-client-id',
   'cognito.clientSecret': 'mock-client-secret',
   'cognito.scope': null
@@ -64,7 +64,7 @@ describe('getAccessToken', () => {
     await getAccessToken()
 
     const [url] = mockFetch.mock.calls[0]
-    expect(url).toBe('https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token')
+    expect(url).toBe('https://third-party-demo-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token')
   })
 
   test('should send the client credentials as a Basic auth header', async () => {
@@ -87,13 +87,13 @@ describe('getAccessToken', () => {
   })
 
   test('should append the scope when configured', async () => {
-    mockConfigGet.mockImplementation((key) => key === 'cognito.scope' ? 'land-app-resource-srv/access' : configValues[key])
+    mockConfigGet.mockImplementation((key) => key === 'cognito.scope' ? 'third-party-demo-app-resource-srv/access' : configValues[key])
     mockFetch.mockResolvedValue(okResponse({ access_token: 'a-token', expires_in: 3600 }))
 
     await getAccessToken()
 
     const [, options] = mockFetch.mock.calls[0]
-    expect(options.body).toBe('grant_type=client_credentials&scope=land-app-resource-srv/access')
+    expect(options.body).toBe('grant_type=client_credentials&scope=third-party-demo-app-resource-srv/access')
   })
 
   test('should return the access token', async () => {
@@ -147,18 +147,18 @@ describe('getAccessToken', () => {
   })
 
   test('should log and rethrow with the underlying cause when the connection to Cognito fails', async () => {
-    const cause = Object.assign(new Error('getaddrinfo ENOTFOUND land-app-c63f2.auth.eu-west-2.amazoncognito.com'), { code: 'ENOTFOUND' })
+    const cause = Object.assign(new Error('getaddrinfo ENOTFOUND third-party-demo-app-c63f2.auth.eu-west-2.amazoncognito.com'), { code: 'ENOTFOUND' })
     const fetchError = new TypeError('fetch failed', { cause })
     mockFetch.mockRejectedValue(fetchError)
     mockLoggerError.mockClear()
 
     const error = await getAccessToken().catch((e) => e)
 
-    expect(error.message).toContain('Cognito token request to https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token failed: fetch failed (ENOTFOUND getaddrinfo ENOTFOUND')
+    expect(error.message).toContain('Cognito token request to https://third-party-demo-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token failed: fetch failed (ENOTFOUND getaddrinfo ENOTFOUND')
     expect(error.cause).toBe(fetchError)
     expect(mockLoggerError).toHaveBeenCalledTimes(1)
     expect(mockLoggerError).toHaveBeenCalledWith(
-      expect.objectContaining({ err: fetchError, tokenUrl: 'https://land-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token' }),
+      expect.objectContaining({ err: fetchError, tokenUrl: 'https://third-party-demo-app-c63f2.auth.eu-west-2.amazoncognito.com/oauth2/token' }),
       expect.stringContaining('ENOTFOUND')
     )
   })

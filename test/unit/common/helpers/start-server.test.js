@@ -29,7 +29,7 @@ describe('startServer', () => {
 
   test('should log the local url', async () => {
     await startServer()
-    expect(mockLoggerInfo).toHaveBeenCalledWith(expect.stringContaining('Access the Land App stub on http://localhost:'))
+    expect(mockLoggerInfo).toHaveBeenCalledWith(expect.stringContaining('Access the Third Party Demo App on http://localhost:'))
   })
 
   test('should return the server', async () => {

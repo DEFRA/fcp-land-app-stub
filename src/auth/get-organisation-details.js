@@ -12,8 +12,8 @@ const TRAILING_FIELD_COUNT = 3
  * A roles entry is in the format "organisationId:roleName:status", where status is
  * a Defra Identity enrolment status: 1 pending, 2 pending verification,
  * 3 complete/approved, 4 complete/rejected, 5 pending appeal, 6 removed, 7 locked.
- * Only 3 grants access, but the role name here is purely informational (Land App
- * authorisation is driven entirely by the scope built from permission groups), so
+ * Only 3 grants access, but the role name here is purely informational (authorisation
+ * is driven entirely by the scope built from permission groups), so
  * this deliberately does not filter on status: doing so would silently turn a
  * valid display value into null.
  */
