@@ -3,15 +3,15 @@
 // Bulma 1.x derives every shade from the hue/saturation/lightness custom
 // properties, so overriding these recolours the whole component set.
 :root {
-  --bulma-primary-h: 220deg;
+  --bulma-primary-h: 270deg;
   --bulma-primary-s: 60%;
   --bulma-primary-l: 40%;
   --bulma-primary-invert-l: 100%;
-  --bulma-link-h: 220deg;
+  --bulma-link-h: 270deg;
   --bulma-link-s: 60%;
   --bulma-link-l: 40%;
   --bulma-link-invert-l: 100%;
-  --bulma-scheme-h: 220;
+  --bulma-scheme-h: 270;
   --bulma-scheme-s: 8%;
 }
 
