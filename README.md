@@ -827,8 +827,9 @@ so you can sign in as any CRN in that file. When you deploy, point
 `DEFRA_ID_WELL_KNOWN_URL` at the real Defra Identity tenant and drop the stub from your
 compose file.
 
-> `example.data.json` uses the same SBIs and CRNs as
-> [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api)'s local test data,
+> `example.data.json` uses the same SBIs and CRNs as the mock data in
+> [fcp-dal-upstream-services-mock](https://github.com/DEFRA/fcp-dal-upstream-services-mock),
+> which [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) runs locally,
 > so the sign in journey shows real permission groups end to end. This needs a
 > `fcp-defra-id-stub` release that reads `AUTH_OVERRIDE_FILE`. Older versions ignore it
 > and always serve their own built-in data: if the business name or SBI in the app
