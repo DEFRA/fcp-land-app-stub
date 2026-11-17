@@ -110,11 +110,6 @@ services:
     environment:
       DAL_ENDPOINT: http://fcp-dal-api:3000/graphql
       DAL_DISABLE_AUTH: "true"
-      # Unused while DAL_DISABLE_AUTH is true, but the API's config requires them to be set.
-      DAL_TENANT_ID: ""
-      DAL_TOKEN_ENDPOINT: ""
-      DAL_CLIENT_ID: ""
-      DAL_CLIENT_SECRET: ""
       SANITIZE_DATA: "false"
       RESTRICT_CRNS: "false"
     networks:
