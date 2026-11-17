@@ -80,7 +80,7 @@ services:
     environment:
       PORT: 3008
       AUTH_MODE: mock
-      AUTH_OVERRIDE_FILE: example.data.json
+      AUTH_OVERRIDE_FILE: defra-id-mock-data.json
       # By default the stub advertises its token/JWKS endpoints on
       # host.docker.internal, assuming every caller is itself a container. The
       # default local dev flow runs this app host-native (`npm run dev`), which
@@ -90,7 +90,7 @@ services:
       # `npm run docker:dev` instead.
       WELL_KNOWN_API_HOST_OVERRIDE: ${WELL_KNOWN_API_HOST_OVERRIDE:-http://localhost:3008}
     volumes:
-      - ./example.data.json:/data/example.data.json
+      - ./defra-id-mock-data.json:/data/defra-id-mock-data.json
     networks:
       - fcp-land-app
     healthcheck:

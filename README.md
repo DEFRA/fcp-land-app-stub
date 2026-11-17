@@ -837,12 +837,12 @@ To run everything, including the app, in Docker:
 npm run docker:dev
 ```
 
-`fcp-defra-id-stub` stands in for Defra Identity locally. It reads `example.data.json`,
+`fcp-defra-id-stub` stands in for Defra Identity locally. It reads `defra-id-mock-data.json`,
 so you can sign in as any CRN in that file. When you deploy, point
 `DEFRA_ID_WELL_KNOWN_URL` at the real Defra Identity tenant and drop the stub from your
 compose file.
 
-> `example.data.json` uses the same CRNs, SBIs, names and business names as the mock data in
+> `defra-id-mock-data.json` uses the same CRNs, SBIs, names and business names as the mock data in
 > [fcp-dal-upstream-services-mock](https://github.com/DEFRA/fcp-dal-upstream-services-mock),
 > which the external API runs against locally, so what Defra Identity says about a user
 > matches what the API returns for them, including their permission groups. This needs a
