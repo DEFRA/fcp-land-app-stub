@@ -113,18 +113,18 @@ describe('GET /home', () => {
     expect(response.payload).toContain(businessDetails.vat)
   })
 
-  test('should display a lookup address from its lookup fields rather than its lines', async () => {
+  test('should display the populated address fields one per line', async () => {
     mockGetBusinessDetails.mockResolvedValue({
       ...businessDetails,
-      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Example Lane', line4: 'ZZ9 9ZZ', city: 'Exampletown', postalCode: 'AB1 2CD' }
+      address: { line1: '1 Example Lane', line2: null, city: 'Exampletown', county: 'Examplesire', postalCode: 'AB1 2CD', uprn: '100012345678' }
     })
 
     const response = await server.inject({
       url: '/home',
       auth: { strategy: 'session', credentials }
     })
-    expect(response.payload).toContain('1 Example Lane<br>Exampletown<br>AB1 2CD<br>')
-    expect(response.payload).not.toContain('ZZ9 9ZZ')
+    expect(response.payload).toContain('1 Example Lane<br>Exampletown<br>Examplesire<br>AB1 2CD<br>')
+    expect(response.payload).not.toContain('100012345678')
   })
 
   test('should show a permission notice instead of business details when the user lacks business scope', async () => {

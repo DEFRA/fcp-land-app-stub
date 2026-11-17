@@ -3,8 +3,7 @@ import { getPersonalDetails } from '../api/get-personal-details.js'
 import { updatePersonalDetails } from '../api/update-personal-details.js'
 import { validatePersonalDetails } from '../validation/validate-personal-details.js'
 import { formatValidationErrors } from '../validation/format-validation-errors.js'
-import { buildManualAddress } from '../validation/build-manual-address.js'
-import { formatOriginalAddress } from '../utils/format-address.js'
+import { toAddressFormValues, toAddressInput } from '../utils/address.js'
 import { parseDateOfBirth } from '../validation/personal/parse-date-of-birth.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
@@ -26,7 +25,7 @@ function toFormValues (personalDetails) {
     personalTelephone: personalDetails.phone?.landline ?? '',
     personalMobile: personalDetails.phone?.mobile ?? '',
     personalEmail: personalDetails.email?.address ?? '',
-    ...formatOriginalAddress(personalDetails.address)
+    ...toAddressFormValues(personalDetails.address)
   }
 }
 
@@ -42,7 +41,7 @@ function toUpdateInput (crn, payload) {
       mobile: payload.personalMobile || null
     },
     email: { address: payload.personalEmail },
-    address: buildManualAddress(payload)
+    address: toAddressInput(payload)
   }
 }
 
@@ -62,7 +61,8 @@ const getPersonalDetailsEdit = {
     }
 
     const formValues = toFormValues(personalDetails)
-    // The manual address rules don't apply to a lookup address (one with a UPRN)
+    // The stub only supports manually entered addresses, so one chosen from a postcode lookup (it has a uprn)
+    // is not checked against the form's rules; the user can correct it in the form before saving
     const { isValid } = validatePersonalDetails(formValues, { includeAddress: !personalDetails.address?.uprn })
 
     // Stored data the form would reject can't be saved back without the user changing fields they didn't touch
