@@ -38,10 +38,11 @@ const validPersonalDetails = {
     line1: '14 Example Drive',
     line2: null,
     line3: null,
-    line4: 'Examplesire',
     city: 'Exampletown',
+    county: 'Examplesire',
     postalCode: 'AB1 2CD',
-    country: 'United Kingdom'
+    country: 'United Kingdom',
+    uprn: null
   },
   email: { address: 'andrew.farmer@example.com' },
   phone: { landline: '01144960123', mobile: '07700900123' }
@@ -130,7 +131,7 @@ describe('GET /personal-details/edit', () => {
   test('should pre-fill the form from a lookup address without validating it', async () => {
     mockGetPersonalDetails.mockResolvedValue({
       ...validPersonalDetails,
-      address: { uprn: '100012345678', buildingName: 'Example Barn', county: 'Examplesire', city: 'Exampletown', postalCode: 'AB1 2CD', country: 'United Kingdom' }
+      address: { line1: 'Example Barn', county: 'Examplesire', city: 'Exampletown', postalCode: 'AB1 2CD', country: null, uprn: '100012345678' }
     })
 
     const response = await server.inject({
@@ -189,9 +190,15 @@ describe('POST /personal-details/edit', () => {
     const [input] = mockUpdatePersonalDetails.mock.calls[0]
     expect(input.crn).toBe(credentials.crn)
     expect(input.dateOfBirth).toBe('1980-01-01')
-    expect(input.address.line1).toBe('14 Example Drive')
-    expect(input.address.line4).toBe('Examplesire')
-    expect(input.address.county).toBeNull()
+    expect(input.address).toEqual({
+      line1: '14 Example Drive',
+      line2: null,
+      line3: null,
+      city: 'Exampletown',
+      county: 'Examplesire',
+      postalCode: 'AB1 2CD',
+      country: 'United Kingdom'
+    })
   })
 
   test('should show an error notice when the update fails', async () => {

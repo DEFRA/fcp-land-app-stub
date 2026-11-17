@@ -7,8 +7,7 @@ import {
   COUNTRY_MAX
 } from '../../constants/validation-fields.js'
 
-// Field names match the external API's address fields (line1-3, city, postalCode, country), with
-// county mapped to line4 on save (see buildManualAddress).
+// Field names match the external API's address fields
 export const addressSchema = Joi.object({
   line1: Joi.string()
     .trim()

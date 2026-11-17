@@ -1,7 +1,7 @@
 import { getPersonalDetails } from '../api/get-personal-details.js'
 import { getBusinessDetails } from '../api/get-business-details.js'
 import { VIEW_PERMISSIONS, FULL_PERMISSIONS } from '../constants/scope/business-details.js'
-import { formatDisplayAddress } from '../utils/format-address.js'
+import { toAddressLines } from '../utils/address.js'
 
 export const home = {
   method: 'GET',
@@ -21,9 +21,9 @@ export const home = {
 
     return h.view('home', {
       personalDetails,
-      personalAddress: formatDisplayAddress(personalDetails?.address),
+      personalAddress: toAddressLines(personalDetails?.address),
       businessDetails,
-      businessAddress: formatDisplayAddress(businessDetails?.address),
+      businessAddress: toAddressLines(businessDetails?.address),
       hasBusinessAccess,
       canEditBusiness,
       updated: request.query.updated

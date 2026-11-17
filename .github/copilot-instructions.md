@@ -39,7 +39,7 @@ src/
   validation/            # Joi schemas and helpers for the edit forms
   views/                 # Nunjucks templates (Bulma markup)
   client/                # Client-side SCSS, JS and images
-  utils/                 # Small helpers (safe redirect)
+  utils/                 # Small helpers (address mapping, safe redirect)
 test/
   unit/                  # Isolated tests with mocked dependencies
   integration/           # server.inject() tests against a real Redis container
@@ -142,9 +142,10 @@ are the documentation, alongside the README.
 - **Scope.** Business details need `VIEW_PERMISSIONS` to view and `FULL_PERMISSIONS` to
   edit (`src/constants/scope/business-details.js`). Personal details only need `user`.
 - **Edit routes.** GET validates the stored data with the same schemas as POST and shows
-  `cannotUpdate` if it fails. `toUpdateInput()` maps form fields to the mutation input;
-  the business address is wrapped in `withoutUprn`, and `buildManualAddress()` writes the
-  county into `line4`.
+  `cannotUpdate` if it fails (skipping the address when it has a `uprn`). `toUpdateInput()`
+  maps form fields to the mutation input. Addresses use the external API's simple shape
+  (`line1`-`line3`, `city`, `county`, `postalCode`, `country`, `uprn`) for both reading and
+  writing; `src/utils/address.js` maps it to display lines, form values and input.
 
 ## Common gotchas
 

@@ -624,6 +624,13 @@ a service needs different limits.
 The query documents are in `src/api/queries/`. Each asks only for the fields the stub
 displays or edits. Address fields are shared through `fragments.js`.
 
+An address comes back as `line1` to `line3`, `city`, `county`, `postalCode` and `country`,
+already in display order, plus a `uprn` if it was chosen from a postcode lookup. That is
+the same whether it was chosen from a lookup or typed in: the external API deals with the
+difference (see its
+[Addresses](https://github.com/DEFRA/fcp-tp-external-api#addresses) section). The home
+page shows the fields that have a value, one per line (`src/utils/address.js`).
+
 The CRN and SBI always come from the session (`request.auth.credentials`), never from the
 URL or a form. That way a user can only ask for their own record and for the business
 they chose at sign in.
@@ -711,7 +718,7 @@ the mutation's input type:
   dateOfBirth: '1975-04-21',    // YYYY-MM-DD
   phone: { landline: '01632 960001', mobile: null },
   email: { address: 'jane@example.com' },
-  address: { line1, line2, line3, line4, city, postalCode, country, ... }
+  address: { line1, line2, line3, city, county, postalCode, country }
 }
 
 // UpdateBusinessAllFields (business details)
@@ -721,18 +728,17 @@ the mutation's input type:
   phone: { landline: '01632 960002', mobile: null },
   email: { address: 'office@example.com' },
   vat: '987654321',             // nine digits, no GB prefix, or null
-  address: { withoutUprn: { line1, line2, line3, line4, city, postalCode, country, ... } }
+  address: { line1, line2, line3, city, county, postalCode, country }
 }
 ```
 
 - Only `crn` or `sbi` is required: any field you leave out is left unchanged. The stub
   sends every field its forms edit, and sends empty optional fields as `null`.
-- The business address is a choice between `withUprn` (an address picked from a postcode
-  lookup, identified by its UPRN) and `withoutUprn` (typed in by hand). Exactly one must
-  be given. The personal address has no such wrapper.
-- For a typed-in address, `src/validation/build-manual-address.js` sets all the lookup-only
-  fields to `null` and saves the form's county in `line4`. Defra's own services do the
-  same, so records look alike whoever edits them.
+- The address replaces the stored one as a whole. The edit forms use the API's own
+  address field names, so `src/utils/address.js` copies them across one to one.
+- An address also takes a `uprn`, but only send it for an address chosen from a postcode
+  lookup and not changed since. The stub has no postcode lookup, so it never sends one,
+  and every address it saves is treated as typed in.
 - Treat anything other than `success: true` as a failure. The update functions throw in
   that case, as they do for any error, so the route shows the "something went wrong"
   notice rather than telling the user their details were saved.
@@ -1024,12 +1030,12 @@ src/
     validate-personal-details.js, validate-business-details.js
     personal/, business/, shared/     Joi schemas per form section
     format-validation-errors.js       Joi errors to template errors
-    build-manual-address.js           Form fields to the API's address input
     joi.js                    Joi extended to reject control characters
   views/                      Nunjucks templates using Bulma, including 403, 404 and 500 pages
   client/                     SCSS, JS and images built by Vite into .public/
   config/                     Convict schemas and Nunjucks setup
   common/helpers/             CDP plumbing: logging, tracing, pulse, secure context, proxy, errors
+  utils/address.js            Address to display lines, form values and mutation input
   utils/get-safe-redirect.js
 ```
 

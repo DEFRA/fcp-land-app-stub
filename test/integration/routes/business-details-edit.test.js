@@ -46,10 +46,11 @@ const validBusinessDetails = {
     line1: '1 Example Lane',
     line2: null,
     line3: null,
-    line4: null,
     city: 'Exampletown',
+    county: null,
     postalCode: 'AB1 2CD',
-    country: 'United Kingdom'
+    country: 'United Kingdom',
+    uprn: null
   },
   email: { address: 'contact@farmsltd.example.com' },
   phone: { landline: '01144960124', mobile: '07700900124' }
@@ -130,7 +131,7 @@ describe('GET /business-details/edit', () => {
   test('should pre-fill the form from a lookup address without validating it', async () => {
     mockGetBusinessDetails.mockResolvedValue({
       ...validBusinessDetails,
-      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Example Lane', city: 'Exampletown', postalCode: 'AB1 2CD', country: 'United Kingdom' }
+      address: { line1: '1 Example Lane', city: 'Exampletown', postalCode: 'AB1 2CD', country: null, uprn: '100012345678' }
     })
 
     const response = await server.inject({
@@ -188,7 +189,15 @@ describe('POST /business-details/edit', () => {
     const [input] = mockUpdateBusinessDetails.mock.calls[0]
     expect(input.sbi).toBe(credentials.sbi)
     expect(input.name).toBe('Farms Ltd')
-    expect(input.address.withoutUprn.line1).toBe('1 Example Lane')
+    expect(input.address).toEqual({
+      line1: '1 Example Lane',
+      line2: null,
+      line3: null,
+      city: 'Exampletown',
+      county: null,
+      postalCode: 'AB1 2CD',
+      country: 'United Kingdom'
+    })
   })
 
   test('should show an error notice when the update fails', async () => {
