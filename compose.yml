@@ -108,10 +108,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      PORT: 3001
-      ENVIRONMENT: local
       DAL_ENDPOINT: http://fcp-dal-api:3000/graphql
-      DAL_GATEWAY_TYPE: external
       DAL_DISABLE_AUTH: "true"
       # Unused while DAL_DISABLE_AUTH is true, but the API's config requires them to be set.
       DAL_TENANT_ID: ""
@@ -120,9 +117,6 @@ services:
       DAL_CLIENT_SECRET: ""
       SANITIZE_DATA: "false"
       RESTRICT_CRNS: "false"
-      GRAPHQL_INTROSPECTION_ENABLED: "true"
-      AWS_EMF_ENVIRONMENT: Local
-      LOG_FORMAT: pino-pretty
     networks:
       - fcp-land-app
     depends_on:
@@ -140,27 +134,22 @@ services:
       - external-api
     image: defradigital/fcp-dal-api
     environment:
-      LOG_LEVEL: info
+      # Production mode publishes a startup metric to CloudWatch and exits if it can't.
       NODE_ENV: development
-      PORT: 3000
+      # The DAL only allows DISABLE_AUTH in its dev environment.
       ENVIRONMENT: dev
       DISABLE_AUTH: "true"
       DISABLE_PROXY: "true"
-      GRAPHQL_DASHBOARD_ENABLED: "true"
-      ADMIN_AD_GROUP_ID: unused
       KITS_INTERNAL_GATEWAY_URL: http://dal-mock:3100/extapi/
       KITS_EXTERNAL_GATEWAY_URL: http://dal-mock:3100/extapi/
       KITS_GATEWAY_TIMEOUT_MS: 3000
       KITS_DISABLE_MTLS: "true"
       KITS_DAL_SERVICE_ACCOUNT_EMAIL: test@example.com
+      KIT_EXT_PERSON_ID_OVERRIDE: 3337243
       HITACHI_BASE_URL: http://dal-mock:3100/api/
-      HITACHI_TIMEOUT_MS: 3000
       HITACHI_DISABLE_AUTH: "true"
       DAL_REQUEST_TIMEOUT_MS: 3000
-      KIT_EXT_PERSON_ID_OVERRIDE: 3337243
       MONGO_URI: mongodb://mongodb:27017
-      MONGO_DATABASE: fcp-dal-api
-      SERVICE_VERSION: 0.0.0
     networks:
       - fcp-land-app
     depends_on:
@@ -178,10 +167,6 @@ services:
     profiles:
       - external-api
     image: defradigital/fcp-dal-upstream-services-mock
-    environment:
-      LOG_LEVEL: info
-      NODE_ENV: development
-      PORT: 3100
     networks:
       - fcp-land-app
     healthcheck:
