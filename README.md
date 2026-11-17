@@ -49,6 +49,7 @@ Design System.
   - [CDP API gateway URLs](#cdp-api-gateway-urls)
   - [Reading data](#reading-data)
   - [Writing data](#writing-data)
+  - [Addresses](#addresses)
   - [Validating input](#validating-input)
   - [Adding a new query or mutation](#adding-a-new-query-or-mutation)
 - [Before you copy this](#before-you-copy-this)
@@ -625,11 +626,9 @@ The query documents are in `src/api/queries/`. Each asks only for the fields the
 displays or edits. Address fields are shared through `fragments.js`.
 
 An address comes back as `line1` to `line3`, `city`, `county`, `postalCode` and `country`,
-already in display order, plus a `uprn` if it was chosen from a postcode lookup. That is
-the same whether it was chosen from a lookup or typed in: the external API deals with the
-difference (see its
-[Addresses](https://github.com/DEFRA/fcp-tp-external-api#addresses) section). The home
-page shows the fields that have a value, one per line (`src/utils/address.js`).
+already in display order, plus a `uprn` if it was chosen from a postcode lookup. The home
+page shows the fields that have a value, one per line (`src/utils/address.js`). See
+[Addresses](#addresses) for how to save one.
 
 The CRN and SBI always come from the session (`request.auth.credentials`), never from the
 URL or a form. That way a user can only ask for their own record and for the business
@@ -735,13 +734,95 @@ the mutation's input type:
 - Only `crn` or `sbi` is required: any field you leave out is left unchanged. The stub
   sends every field its forms edit, and sends empty optional fields as `null`.
 - The address replaces the stored one as a whole. The edit forms use the API's own
-  address field names, so `src/utils/address.js` copies them across one to one.
-- An address also takes a `uprn`, but only send it for an address chosen from a postcode
-  lookup and not changed since. The stub has no postcode lookup, so it never sends one,
-  and every address it saves is treated as typed in.
+  address field names, so `src/utils/address.js` copies them across one to one. See
+  [Addresses](#addresses) for the alternative of saving an address from a postcode lookup.
 - Treat anything other than `success: true` as a failure. The update functions throw in
   that case, as they do for any error, so the route shows the "something went wrong"
   notice rather than telling the user their details were saved.
+
+### Addresses
+
+Personal and business addresses use the same fields, for both reading and writing:
+
+| Field | Required when saving | Notes |
+|---|---|---|
+| `line1` | Yes | Typically the building and street |
+| `line2` | | |
+| `line3` | | |
+| `city` | Yes | Town or city |
+| `county` | | |
+| `postalCode` | Yes | |
+| `country` | Yes | |
+| `uprn` | Only for a postcode lookup | Unique Property Reference Number |
+
+There are two ways to save an address. Both send the same fields: the only difference is
+whether you include a `uprn`.
+
+**Entered manually.** The user types the address into a form. Send the fields they
+entered and leave `uprn` out. This is what the stub does.
+
+```js
+address: {
+  line1: 'Oakwood House',
+  line2: '14 Oakwood Drive',
+  line3: null,
+  city: 'Sheffield',
+  county: 'South Yorkshire',
+  postalCode: 'S10 2GH',
+  country: 'United Kingdom'
+}
+```
+
+**Chosen from a postcode lookup.** The user enters a postcode, your service looks up the
+addresses at it using an address service such as the Ordnance Survey's OS Places API,
+and the user picks one. Send that address's fields along with its `uprn`. You'll need to
+map the lookup result onto the fields yourself. Following this pattern keeps it
+consistent with how the address is read back:
+
+| Field | From the lookup result |
+|---|---|
+| `line1` | Organisation name, sub-building (flat) and building name, separated by commas |
+| `line2` | Building number and street, separated by a space |
+| `line3` | Double dependent locality and dependent locality, separated by commas |
+| `city` | Post town |
+| `county` | County, if the lookup gives one |
+| `postalCode` | Postcode |
+| `country` | Country. If the lookup doesn't give one, supply it yourself, as it is still required |
+| `uprn` | UPRN |
+
+```js
+address: {
+  line1: 'Oakwood House',
+  line2: '14 Oakwood Drive',
+  line3: null,
+  city: 'Sheffield',
+  county: 'South Yorkshire',
+  postalCode: 'S10 2GH',
+  country: 'United Kingdom',
+  uprn: '100021432873'
+}
+```
+
+Only send a `uprn` for an address the user picked and didn't change afterwards. If they
+edit it, save it as a manually entered address without the `uprn`, because the UPRN no
+longer describes what they entered.
+
+Either way, the address you send replaces the stored one as a whole, so any optional
+field you leave out is cleared.
+
+**This stub only supports manually entered addresses**, to keep the example simple. It
+has no postcode lookup and never sends a `uprn`. That has two consequences:
+
+- When a user saves an edit form, their address is saved as manually entered, even if it
+  was originally chosen from a postcode lookup in another service.
+- When the edit routes check the stored data before showing the form (see
+  [Writing data](#writing-data)), they only check the address against the form's rules
+  if it was entered manually. An address chosen from a postcode lookup was never held to
+  those rules, so the form is shown anyway and the user can correct it before saving.
+
+The external API's [Addresses](https://github.com/DEFRA/fcp-tp-external-api#addresses)
+section explains how these fields are stored behind the scenes. You don't need it to
+integrate.
 
 ### Validating input
 

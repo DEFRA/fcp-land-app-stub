@@ -53,7 +53,8 @@ const getBusinessDetailsEdit = {
     }
 
     const formValues = toFormValues(businessDetails)
-    // An address from a postcode lookup was never held to these rules, so let the user fix it in the form
+    // The stub only supports manually entered addresses, so one chosen from a postcode lookup (it has a uprn)
+    // is not checked against the form's rules; the user can correct it in the form before saving
     const { isValid } = validateBusinessDetails(formValues, { includeAddress: !businessDetails.address?.uprn })
 
     // Stored data the form would reject can't be saved back without the user changing fields they didn't touch
