@@ -3,7 +3,7 @@
   "tasks": [
     {
       "label": "Services: Up",
-      "detail": "Start Redis + Defra Identity stub containers",
+      "detail": "Start Redis, Defra Identity stub and external API containers",
       "type": "npm",
       "script": "services:up",
       "isBackground": true,
