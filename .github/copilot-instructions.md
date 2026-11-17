@@ -63,8 +63,12 @@ Key rules: no unused variables, no semicolons, single quotes, 2-space indentatio
 ```bash
 nvm use && npm install
 cp .env.example .env
-npm run local            # starts Redis + the Defra ID stub, then runs the app with hot reload
+npm run local            # starts Redis, the Defra ID stub and the bundled external API, then runs the app with hot reload
 ```
+
+The bundled `defradigital/fcp-tp-external-api` image and its DAL stack sit behind the
+`external-api` compose profile, enabled by `COMPOSE_PROFILES` in `.env`. Clear it to run
+fcp-tp-external-api from a local checkout on the same port (3001) instead.
 
 Or start the dependencies separately:
 
@@ -76,7 +80,7 @@ npm run dev
 Full Docker stack:
 
 ```bash
-docker compose --profile app up
+npm run docker:dev        # targets the app service by name: `--profile app` would replace COMPOSE_PROFILES
 ```
 
 ### Testing

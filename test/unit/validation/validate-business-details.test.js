@@ -6,10 +6,10 @@ const validPayload = {
   businessMobile: '',
   businessEmail: 'contact@hendersonfamilyfarms.example.com',
   vatNumber: '123456789',
-  line1: '1 Farm Lane',
+  line1: '1 Example Lane',
   line2: '',
   line3: '',
-  city: 'Sheffield',
+  city: 'Exampletown',
   county: '',
   postalCode: 'AB1 2CD',
   country: 'United Kingdom'
@@ -48,5 +48,10 @@ describe('validateBusinessDetails', () => {
     const { isValid, errors } = validateBusinessDetails({ ...validPayload, line1: '', city: '', postalCode: '', country: '' })
     expect(isValid).toBe(false)
     expect(errors.some((error) => error.path[0] === 'line1')).toBe(true)
+  })
+
+  test('should skip the address when includeAddress is false', () => {
+    const { isValid } = validateBusinessDetails({ ...validPayload, line1: '' }, { includeAddress: false })
+    expect(isValid).toBe(true)
   })
 })

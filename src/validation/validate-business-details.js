@@ -4,15 +4,15 @@ import { businessEmailSchema } from './business/business-email-schema.js'
 import { businessVatSchema } from './business/business-vat-schema.js'
 import { addressSchema } from './shared/address-schema.js'
 
-const schemas = [businessNameSchema, businessPhoneSchema, businessEmailSchema, businessVatSchema, addressSchema]
+const schemas = [businessNameSchema, businessPhoneSchema, businessEmailSchema, businessVatSchema]
 
 // Validates each schema independently (not combined into one Joi schema), the same
 // technique as validatePersonalDetails. Used both to check the currently stored data
 // on GET, and to validate the submitted form on POST.
-export function validateBusinessDetails (payload) {
+export function validateBusinessDetails (payload, { includeAddress = true } = {}) {
   const errors = []
 
-  for (const schema of schemas) {
+  for (const schema of includeAddress ? [...schemas, addressSchema] : schemas) {
     const { error } = schema.validate(payload, { abortEarly: false, allowUnknown: true })
 
     if (error) {

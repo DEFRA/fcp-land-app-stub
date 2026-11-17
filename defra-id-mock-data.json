@@ -2,8 +2,8 @@
   "people": [
     {
       "crn": 9111112200,
-      "firstName": "Uma",
-      "lastName": "Walker",
+      "firstName": "Maybelle",
+      "lastName": "Johns",
       "organisations": [
         {
           "organisationId": "111111111",
@@ -19,8 +19,8 @@
     },
     {
       "crn": 9111111902,
-      "firstName": "Frank",
-      "lastName": "Wood",
+      "firstName": "Frederick",
+      "lastName": "Forsyth",
       "organisations": [
         {
           "organisationId": "333333334",

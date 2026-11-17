@@ -35,16 +35,16 @@ const validPersonalDetails = {
   name: { first: 'Andrew', middle: null, last: 'Farmer' },
   dateOfBirth: '1980-01-01',
   address: {
-    line1: '14 Oakwood Drive',
+    line1: '14 Example Drive',
     line2: null,
     line3: null,
-    line4: 'South Yorkshire',
-    city: 'Sheffield',
-    postalCode: 'S10 2GH',
+    line4: 'Examplesire',
+    city: 'Exampletown',
+    postalCode: 'AB1 2CD',
     country: 'United Kingdom'
   },
   email: { address: 'andrew.farmer@example.com' },
-  phone: { landline: '01144960123', mobile: '07771234567' }
+  phone: { landline: '01144960123', mobile: '07700900123' }
 }
 
 const validPayload = {
@@ -55,14 +55,14 @@ const validPayload = {
   month: '1',
   year: '1980',
   personalTelephone: '01144960123',
-  personalMobile: '07771234567',
+  personalMobile: '07700900123',
   personalEmail: 'andrew.farmer@example.com',
-  line1: '14 Oakwood Drive',
+  line1: '14 Example Drive',
   line2: '',
   line3: '',
-  city: 'Sheffield',
-  county: 'South Yorkshire',
-  postalCode: 'S10 2GH',
+  city: 'Exampletown',
+  county: 'Examplesire',
+  postalCode: 'AB1 2CD',
   country: 'United Kingdom'
 }
 
@@ -100,7 +100,7 @@ describe('GET /personal-details/edit', () => {
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(response.request.response.source.template).toBe('personal-details-edit')
     expect(response.payload).toContain('value="Andrew"')
-    expect(response.payload).toContain('value="S10 2GH"')
+    expect(response.payload).toContain('value="AB1 2CD"')
   })
 
   test('should show a contact-RPA notice instead of the form when the current data is invalid', async () => {
@@ -125,6 +125,22 @@ describe('GET /personal-details/edit', () => {
     })
 
     expect(response.payload).toContain('Rural Payments Agency')
+  })
+
+  test('should pre-fill the form from a lookup address without validating it', async () => {
+    mockGetPersonalDetails.mockResolvedValue({
+      ...validPersonalDetails,
+      address: { uprn: '100012345678', buildingName: 'Example Barn', county: 'Examplesire', city: 'Exampletown', postalCode: 'AB1 2CD', country: 'United Kingdom' }
+    })
+
+    const response = await server.inject({
+      url: '/personal-details/edit',
+      auth: { strategy: 'session', credentials }
+    })
+
+    expect(response.payload).toContain('<form')
+    expect(response.payload).toContain('value="Example Barn"')
+    expect(response.payload).toContain('value="Examplesire"')
   })
 })
 
@@ -173,8 +189,8 @@ describe('POST /personal-details/edit', () => {
     const [input] = mockUpdatePersonalDetails.mock.calls[0]
     expect(input.crn).toBe(credentials.crn)
     expect(input.dateOfBirth).toBe('1980-01-01')
-    expect(input.address.line1).toBe('14 Oakwood Drive')
-    expect(input.address.line4).toBe('South Yorkshire')
+    expect(input.address.line1).toBe('14 Example Drive')
+    expect(input.address.line4).toBe('Examplesire')
     expect(input.address.county).toBeNull()
   })
 

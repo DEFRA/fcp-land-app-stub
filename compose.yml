@@ -1,10 +1,16 @@
 # Local development stack.
 #
-#   docker compose up -d                 # Redis + the Defra Identity stub only
-#   docker compose --profile app up      # the above plus this app in a container
+#   docker compose up -d                       # Redis, the Defra Identity stub and, if enabled, the external API
+#   docker compose up fcp-land-app-stub        # this app in a container (`npm run docker:dev` does both)
 #
 # The app is gated behind `profiles: ["app"]` so `npm run services:up` starts the
-# dependencies while the app itself runs host-native with hot reload.
+# dependencies while the app itself runs host-native with hot reload. Target it by
+# name rather than with `--profile app`, which would replace COMPOSE_PROFILES.
+#
+# The FCP third party external API and its local data access layer are gated behind
+# the `external-api` profile, which .env.example enables via COMPOSE_PROFILES. Clear
+# COMPOSE_PROFILES to run fcp-tp-external-api from a local checkout instead: both
+# listen on port 3001, so EXTERNAL_API_ENDPOINT is the same either way.
 #
 # fcp-defra-id-stub stands in for Defra Identity locally. When deployed, point
 # DEFRA_ID_WELL_KNOWN_URL at the real Defra Identity tenant instead and drop this
@@ -30,18 +36,18 @@ services:
     environment:
       REDIS_HOST: redis
       DEFRA_ID_WELL_KNOWN_URL: http://fcp-defra-id-stub:3008/idphub/b2c/b2c_1a_cui_cpdev_signupsigninsfi/.well-known/openid-configuration
-      # fcp-tp-external-api runs in its own compose stack, not this one, so it's
-      # reached via the host rather than a service name on the fcp-land-app network.
+      # Reached via the host so it works whether the API is bundled here or run from
+      # its own checkout.
       EXTERNAL_API_ENDPOINT: ${EXTERNAL_API_ENDPOINT:-http://host.docker.internal:3001/graphql}
       COGNITO_ENABLED: ${COGNITO_ENABLED:-false}
       COGNITO_DOMAIN: ${COGNITO_DOMAIN:-}
       COGNITO_CLIENT_ID: ${COGNITO_CLIENT_ID:-}
       COGNITO_SECRET: ${COGNITO_SECRET:-}
       COGNITO_SCOPE: ${COGNITO_SCOPE:-fcp-tp-external-api-resource-srv/access}
-    # host.docker.internal reaches fcp-tp-external-api's own compose stack from
+    # host.docker.internal reaches fcp-tp-external-api's published port from
     # inside this container. It does NOT reach fcp-defra-id-stub's token/JWKS
     # endpoints here (see the WELL_KNOWN_API_HOST_OVERRIDE comment below) - that
-    # only matters if you run this service itself via `--profile app`.
+    # only matters if you run this service itself via `npm run docker:dev`.
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -63,7 +69,7 @@ services:
       - fcp-land-app
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 3s
       timeout: 3s
       retries: 5
 
@@ -74,25 +80,107 @@ services:
     environment:
       PORT: 3008
       AUTH_MODE: mock
-      AUTH_OVERRIDE_FILE: example.data.json
+      AUTH_OVERRIDE_FILE: defra-id-mock-data.json
       # By default the stub advertises its token/JWKS endpoints on
       # host.docker.internal, assuming every caller is itself a container. The
       # default local dev flow runs this app host-native (`npm run dev`), which
       # cannot rely on host.docker.internal resolving back to a Docker-published
       # port - only containers get that mapping (via extra_hosts, below).
       # Override back to http://fcp-defra-id-stub:3008 if you run this app with
-      # `docker compose --profile app up` instead.
+      # `npm run docker:dev` instead.
       WELL_KNOWN_API_HOST_OVERRIDE: ${WELL_KNOWN_API_HOST_OVERRIDE:-http://localhost:3008}
     volumes:
-      - ./example.data.json:/data/example.data.json
+      - ./defra-id-mock-data.json:/data/defra-id-mock-data.json
     networks:
       - fcp-land-app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3008/health"]
-      interval: 1m30s
-      timeout: 30s
-      retries: 5
-      start_period: 3s
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  # The published fcp-tp-external-api image, so third parties don't need to clone it.
+  # Sanitization is off because the mock behind it only holds fake data.
+  fcp-tp-external-api:
+    profiles:
+      - external-api
+    image: defradigital/fcp-tp-external-api:${FCP_TP_EXTERNAL_API_TAG:-latest}
+    ports:
+      - "3001:3001"
+    environment:
+      DAL_ENDPOINT: http://fcp-dal-api:3000/graphql
+      DAL_DISABLE_AUTH: "true"
+      SANITIZE_DATA: "false"
+      RESTRICT_CRNS: "false"
+    networks:
+      - fcp-land-app
+    depends_on:
+      fcp-dal-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  # fcp-tp-external-api's local data access layer, backed by mock Rural Payments data.
+  fcp-dal-api:
+    profiles:
+      - external-api
+    image: defradigital/fcp-dal-api
+    environment:
+      # Production mode publishes a startup metric to CloudWatch and exits if it can't.
+      NODE_ENV: development
+      # The DAL only allows DISABLE_AUTH in its dev environment.
+      ENVIRONMENT: dev
+      DISABLE_AUTH: "true"
+      DISABLE_PROXY: "true"
+      KITS_INTERNAL_GATEWAY_URL: http://dal-mock:3100/extapi/
+      KITS_EXTERNAL_GATEWAY_URL: http://dal-mock:3100/extapi/
+      KITS_GATEWAY_TIMEOUT_MS: 3000
+      KITS_DISABLE_MTLS: "true"
+      KITS_DAL_SERVICE_ACCOUNT_EMAIL: test@example.com
+      KIT_EXT_PERSON_ID_OVERRIDE: 3337243
+      HITACHI_BASE_URL: http://dal-mock:3100/api/
+      HITACHI_DISABLE_AUTH: "true"
+      DAL_REQUEST_TIMEOUT_MS: 3000
+      MONGO_URI: mongodb://mongodb:27017
+    networks:
+      - fcp-land-app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      dal-mock:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  dal-mock:
+    profiles:
+      - external-api
+    image: defradigital/fcp-dal-upstream-services-mock
+    networks:
+      - fcp-land-app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/health"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
+
+  mongodb:
+    profiles:
+      - external-api
+    image: mongo:7
+    networks:
+      - fcp-land-app
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 3s
+      timeout: 2s
+      retries: 10
 
 networks:
   fcp-land-app:

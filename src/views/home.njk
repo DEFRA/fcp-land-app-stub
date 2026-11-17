@@ -2,11 +2,9 @@
 
 {% block pageTitle %}Your details - {{ serviceName }}{% endblock %}
 
-{% macro formatAddress(address) %}
-  {% if address %}
-    {% for line in [address.line1, address.line2, address.line3, address.line4, address.line5, address.postalCode] %}
-      {% if line %}{{ line }}<br>{% endif %}
-    {% endfor %}
+{% macro formatAddress(lines) %}
+  {% if lines | length %}
+    {% for line in lines %}{{ line }}<br>{% endfor %}
   {% else %}
     <span class="has-text-grey">Not available</span>
   {% endif %}
@@ -51,7 +49,7 @@
           </tr>
           <tr>
             <th>Personal address</th>
-            <td>{{ formatAddress(personalDetails.address) }}</td>
+            <td>{{ formatAddress(personalAddress) }}</td>
           </tr>
           <tr>
             <th>Personal phone numbers</th>
@@ -90,7 +88,7 @@
           </tr>
           <tr>
             <th>Business address</th>
-            <td>{{ formatAddress(businessDetails.address) }}</td>
+            <td>{{ formatAddress(businessAddress) }}</td>
           </tr>
           <tr>
             <th>Business phone numbers</th>

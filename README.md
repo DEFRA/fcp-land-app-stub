@@ -54,7 +54,7 @@ Design System.
 - [Before you copy this](#before-you-copy-this)
 - [Part 4: Running and configuring](#part-4-running-and-configuring)
   - [Running it locally](#running-it-locally)
-  - [Running against the API locally](#running-against-the-api-locally)
+  - [Developing against a local checkout of the API](#developing-against-a-local-checkout-of-the-api)
   - [Integration checklist](#integration-checklist)
   - [Configuration](#configuration)
 - [For maintainers](#for-maintainers)
@@ -110,9 +110,10 @@ To integrate for real you need three sets of values from Defra:
 | A Cognito client ID, client secret and domain | The CDP platform team | Authenticating the third party service to the API gateway (deployed environments only) |
 
 Locally, [fcp-defra-id-stub](https://github.com/DEFRA/fcp-defra-id-stub) stands in for
-Defra Identity, a local checkout of
-[fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) stands in for the
-API, and Cognito is switched off.
+Defra Identity, the published
+[fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) image runs against
+mock Rural Payments data, and Cognito is switched off. Everything starts from this
+repository: there is nothing else to clone.
 
 ## Key terms
 
@@ -591,7 +592,9 @@ secret), `src/api/query.js` clears the cache and retries once with a new token.
 
 `COGNITO_ENABLED=false` (the default) skips all of this: no Cognito call is made and no
 `Authorization` header is sent. Local development uses this, because the external API
-has no gateway in front of it when run locally.
+has no gateway in front of it when run locally. The API itself never checks the Cognito
+token, so the gateway's side of this, including the retry, can only be tried against a
+deployed environment.
 
 ### CDP API gateway URLs
 
@@ -801,13 +804,25 @@ cp .env.example .env
 npm run local
 ```
 
-`npm run local` starts the dependency containers (Redis and
-[fcp-defra-id-stub](https://github.com/DEFRA/fcp-defra-id-stub)), then runs the app on
-your machine with hot reload. Open <http://localhost:3000>.
+`npm run local` starts the dependency containers, waits for them to be healthy, then runs
+the app on your machine with hot reload. Open <http://localhost:3000>.
 
-Without the external API running, you can still sign in, but you'll only get the `user`
-scope and `/home` will show "Unable to load" for your details. To see permissions and
-data, also [run the API locally](#running-against-the-api-locally).
+The dependency containers are:
+
+- Redis, for sessions
+- [fcp-defra-id-stub](https://github.com/DEFRA/fcp-defra-id-stub), standing in for Defra
+  Identity
+- the published [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) image
+  on <http://localhost:3001/graphql>, with its data access layer and mock Rural Payments
+  data behind it
+
+The external API containers are enabled by `COMPOSE_PROFILES=external-api` in `.env`.
+They use the `latest` image unless you set `FCP_TP_EXTERNAL_API_TAG`. Run
+`docker compose pull` to fetch a newer one.
+
+The local API returns the mock data as it is. A deployed API replaces personal and
+business details with consistent fake values, and shows your own recent edits back to
+you in place of those fake values.
 
 To start the dependencies and the app separately:
 
@@ -819,18 +834,18 @@ npm run dev
 To run everything, including the app, in Docker:
 
 ```bash
-docker compose --profile app up
+npm run docker:dev
 ```
 
-`fcp-defra-id-stub` stands in for Defra Identity locally. It reads `example.data.json`,
+`fcp-defra-id-stub` stands in for Defra Identity locally. It reads `defra-id-mock-data.json`,
 so you can sign in as any CRN in that file. When you deploy, point
 `DEFRA_ID_WELL_KNOWN_URL` at the real Defra Identity tenant and drop the stub from your
 compose file.
 
-> `example.data.json` uses the same SBIs and CRNs as the mock data in
+> `defra-id-mock-data.json` uses the same CRNs, SBIs, names and business names as the mock data in
 > [fcp-dal-upstream-services-mock](https://github.com/DEFRA/fcp-dal-upstream-services-mock),
-> which [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) runs locally,
-> so the sign in journey shows real permission groups end to end. This needs a
+> which the external API runs against locally, so what Defra Identity says about a user
+> matches what the API returns for them, including their permission groups. This needs a
 > `fcp-defra-id-stub` release that reads `AUTH_OVERRIDE_FILE`. Older versions ignore it
 > and always serve their own built-in data: if the business name or SBI in the app
 > doesn't match this file, that's why.
@@ -843,18 +858,20 @@ Useful scripts:
 | `npm run dev` | The app only, with hot reload |
 | `npm run dev:debug` | As above with the Node inspector on 9229 |
 | `npm run services:up` / `services:down` | Dependency containers |
+| `npm run docker:dev` | Dependencies plus the app, all in Docker |
 | `npm run build:frontend` | Build client assets with Vite |
 | `npm run lint` / `lint:fix` | Neostandard |
 | `npm test` | Unit and integration tests with coverage |
 
-### Running against the API locally
+### Developing against a local checkout of the API
 
-1. Start [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) on its
-   default port by running `npm run services:up && npm run dev` in that repository.
-2. Leave `COGNITO_ENABLED=false` in this repository's `.env`: there is no API gateway
-   locally.
-3. Start this stub as normal (`npm run local`). Containerised runs reach the API through
-   `host.docker.internal`, which is already set up in `compose.yml`.
+To change [fcp-tp-external-api](https://github.com/DEFRA/fcp-tp-external-api) and this
+stub together, run the API from its own repository instead of the published image:
+
+1. Set `COMPOSE_PROFILES=` (empty) in this repository's `.env`, so the bundled API isn't
+   started. Both use port 3001, so they can't run at the same time.
+2. Run `npm run services:up && npm run dev` in the fcp-tp-external-api repository.
+3. Start this stub as normal (`npm run local`). `EXTERNAL_API_ENDPOINT` doesn't change.
 
 ### Integration checklist
 
@@ -949,6 +966,13 @@ All configuration goes through Convict in [src/config](src/config). Never read
 | `COGNITO_SCOPE` | `fcp-tp-external-api-resource-srv/access` | OAuth 2.0 scope to request, matching CDP's one-resource-server-per-API convention |
 | `HTTP_PROXY` | | Outbound proxy, set by the platform |
 | `ENABLE_SECURE_CONTEXT` | `true` in production | Load `TRUSTSTORE_` certificates |
+
+Docker Compose also reads two variables from `.env`. They only affect the local stack:
+
+| Variable | Default | Description |
+|---|---|---|
+| `COMPOSE_PROFILES` | `external-api` in `.env.example` | Set to `external-api` to start the bundled external API, or leave empty to use a local checkout |
+| `FCP_TP_EXTERNAL_API_TAG` | `latest` | The `defradigital/fcp-tp-external-api` image tag to run |
 
 ## For maintainers
 

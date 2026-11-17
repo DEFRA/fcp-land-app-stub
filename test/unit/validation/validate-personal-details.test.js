@@ -10,12 +10,12 @@ const validPayload = {
   personalTelephone: '01144960123',
   personalMobile: '',
   personalEmail: 'james.henderson@example.com',
-  line1: '14 Oakwood Drive',
+  line1: '14 Example Drive',
   line2: '',
   line3: '',
-  city: 'Sheffield',
+  city: 'Exampletown',
   county: '',
-  postalCode: 'S10 2GH',
+  postalCode: 'AB1 2CD',
   country: 'United Kingdom'
 }
 
@@ -71,5 +71,10 @@ describe('validatePersonalDetails', () => {
     const { isValid, errors } = validatePersonalDetails({ ...validPayload, line1: '', city: '', postalCode: '', country: '' })
     expect(isValid).toBe(false)
     expect(errors.some((error) => error.path[0] === 'line1')).toBe(true)
+  })
+
+  test('should skip the address when includeAddress is false', () => {
+    const { isValid } = validatePersonalDetails({ ...validPayload, line1: '' }, { includeAddress: false })
+    expect(isValid).toBe(true)
   })
 })

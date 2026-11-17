@@ -25,9 +25,9 @@ const businessData = {
       vendorNumber: '694523',
       legalStatus: { code: '102111', type: 'Sole Proprietorship' },
       type: { code: '101443', type: 'Central Government' },
-      address: { line1: '14 Oakwood Drive', postalCode: 'S10 2GH' },
+      address: { line1: '14 Example Drive', postalCode: 'AB1 2CD' },
       email: { address: 'contact@hendersonfamilyfarms.example.com' },
-      phone: { landline: '01144960123', mobile: '07771234567' }
+      phone: { landline: '01144960123', mobile: '07700900123' }
     }
   }
 }
