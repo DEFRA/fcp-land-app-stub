@@ -763,12 +763,12 @@ entered and leave `uprn` out. This is what the stub does.
 
 ```js
 address: {
-  line1: 'Oakwood House',
-  line2: '14 Oakwood Drive',
+  line1: 'Example Farm',
+  line2: '1 Example Lane',
   line3: null,
-  city: 'Sheffield',
-  county: 'South Yorkshire',
-  postalCode: 'S10 2GH',
+  city: 'Exampletown',
+  county: 'Examplesire',
+  postalCode: 'AB1 2CD',
   country: 'United Kingdom'
 }
 ```
@@ -792,14 +792,14 @@ consistent with how the address is read back:
 
 ```js
 address: {
-  line1: 'Oakwood House',
-  line2: '14 Oakwood Drive',
+  line1: 'Example Farm',
+  line2: '1 Example Lane',
   line3: null,
-  city: 'Sheffield',
-  county: 'South Yorkshire',
-  postalCode: 'S10 2GH',
+  city: 'Exampletown',
+  county: 'Examplesire',
+  postalCode: 'AB1 2CD',
   country: 'United Kingdom',
-  uprn: '100021432873'
+  uprn: '123456789012'
 }
 ```
 
