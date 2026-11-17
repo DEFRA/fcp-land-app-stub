@@ -21,7 +21,7 @@ const personData = {
       dateOfBirth: '1972-04-17',
       address: { line1: '14 Example Drive', postalCode: 'AB1 2CD' },
       email: { address: 'james.henderson@example.com' },
-      phone: { landline: '01144960123', mobile: '07771234567' }
+      phone: { landline: '01144960123', mobile: '07700900123' }
     }
   }
 }

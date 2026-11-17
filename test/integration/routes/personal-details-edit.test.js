@@ -44,7 +44,7 @@ const validPersonalDetails = {
     country: 'United Kingdom'
   },
   email: { address: 'andrew.farmer@example.com' },
-  phone: { landline: '01144960123', mobile: '07771234567' }
+  phone: { landline: '01144960123', mobile: '07700900123' }
 }
 
 const validPayload = {
@@ -55,7 +55,7 @@ const validPayload = {
   month: '1',
   year: '1980',
   personalTelephone: '01144960123',
-  personalMobile: '07771234567',
+  personalMobile: '07700900123',
   personalEmail: 'andrew.farmer@example.com',
   line1: '14 Example Drive',
   line2: '',

@@ -27,7 +27,7 @@ const businessData = {
       type: { code: '101443', type: 'Central Government' },
       address: { line1: '14 Example Drive', postalCode: 'AB1 2CD' },
       email: { address: 'contact@hendersonfamilyfarms.example.com' },
-      phone: { landline: '01144960123', mobile: '07771234567' }
+      phone: { landline: '01144960123', mobile: '07700900123' }
     }
   }
 }

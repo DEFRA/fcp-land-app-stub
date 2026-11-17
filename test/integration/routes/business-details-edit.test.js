@@ -52,13 +52,13 @@ const validBusinessDetails = {
     country: 'United Kingdom'
   },
   email: { address: 'contact@farmsltd.example.com' },
-  phone: { landline: '01144960124', mobile: '07771234568' }
+  phone: { landline: '01144960124', mobile: '07700900124' }
 }
 
 const validPayload = {
   businessName: 'Farms Ltd',
   businessTelephone: '01144960124',
-  businessMobile: '07771234568',
+  businessMobile: '07700900124',
   businessEmail: 'contact@farmsltd.example.com',
   vatNumber: '987654321',
   line1: '1 Example Lane',

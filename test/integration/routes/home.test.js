@@ -36,7 +36,7 @@ const personalDetails = {
   dateOfBirth: '1980-01-01',
   address: { line1: '14 Example Drive', postalCode: 'AB1 2CD' },
   email: { address: 'andrew.farmer@example.com' },
-  phone: { landline: '01144960123', mobile: '07771234567' }
+  phone: { landline: '01144960123', mobile: '07700900123' }
 }
 
 const businessDetails = {
@@ -51,7 +51,7 @@ const businessDetails = {
   type: { code: '101443', type: 'Central Government' },
   address: { line1: '1 Example Lane', postalCode: 'AB1 2CD' },
   email: { address: 'contact@farmsltd.example.com' },
-  phone: { landline: '01144960124', mobile: '07771234568' }
+  phone: { landline: '01144960124', mobile: '07700900124' }
 }
 
 let server
