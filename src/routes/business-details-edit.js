@@ -4,6 +4,7 @@ import { updateBusinessDetails } from '../api/update-business-details.js'
 import { validateBusinessDetails } from '../validation/validate-business-details.js'
 import { formatValidationErrors } from '../validation/format-validation-errors.js'
 import { buildManualAddress } from '../validation/build-manual-address.js'
+import { formatOriginalAddress } from '../utils/format-address.js'
 import { FULL_PERMISSIONS } from '../constants/scope/business-details.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
@@ -19,14 +20,7 @@ function toFormValues (businessDetails) {
     businessMobile: businessDetails.phone?.mobile ?? '',
     businessEmail: businessDetails.email?.address ?? '',
     vatNumber: businessDetails.vat ?? '',
-    line1: businessDetails.address?.line1 ?? '',
-    line2: businessDetails.address?.line2 ?? '',
-    line3: businessDetails.address?.line3 ?? '',
-    city: businessDetails.address?.city ?? '',
-    // Manual saves write "county" into the DAL's line4 field (see buildManualAddress)
-    county: businessDetails.address?.line4 ?? '',
-    postalCode: businessDetails.address?.postalCode ?? '',
-    country: businessDetails.address?.country ?? ''
+    ...formatOriginalAddress(businessDetails.address)
   }
 }
 
@@ -61,7 +55,8 @@ const getBusinessDetailsEdit = {
     }
 
     const formValues = toFormValues(businessDetails)
-    const { isValid } = validateBusinessDetails(formValues)
+    // The manual address rules don't apply to a lookup address (one with a UPRN)
+    const { isValid } = validateBusinessDetails(formValues, { includeAddress: !businessDetails.address?.uprn })
 
     // Stored data the form would reject can't be saved back without the user changing fields they didn't touch
     if (!isValid) {

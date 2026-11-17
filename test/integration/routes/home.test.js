@@ -113,6 +113,20 @@ describe('GET /home', () => {
     expect(response.payload).toContain(businessDetails.vat)
   })
 
+  test('should display a lookup address from its lookup fields rather than its lines', async () => {
+    mockGetBusinessDetails.mockResolvedValue({
+      ...businessDetails,
+      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Farm Lane', line4: 'IG1 1NO', city: 'Sheffield', postalCode: 'AB1 2CD' }
+    })
+
+    const response = await server.inject({
+      url: '/home',
+      auth: { strategy: 'session', credentials }
+    })
+    expect(response.payload).toContain('1 Farm Lane<br>Sheffield<br>AB1 2CD<br>')
+    expect(response.payload).not.toContain('IG1 1NO')
+  })
+
   test('should show a permission notice instead of business details when the user lacks business scope', async () => {
     const response = await server.inject({
       url: '/home',

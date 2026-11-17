@@ -126,6 +126,21 @@ describe('GET /business-details/edit', () => {
     expect(response.payload).toContain('Rural Payments Agency')
     expect(response.payload).not.toContain('<form')
   })
+
+  test('should pre-fill the form from a lookup address without validating it', async () => {
+    mockGetBusinessDetails.mockResolvedValue({
+      ...validBusinessDetails,
+      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Farm Lane', city: 'Sheffield', postalCode: 'AB1 2CD', country: 'United Kingdom' }
+    })
+
+    const response = await server.inject({
+      url: '/business-details/edit',
+      auth: { strategy: 'session', credentials }
+    })
+
+    expect(response.payload).toContain('<form')
+    expect(response.payload).toContain('value="1 Farm Lane"')
+  })
 })
 
 describe('POST /business-details/edit', () => {

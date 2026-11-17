@@ -126,6 +126,22 @@ describe('GET /personal-details/edit', () => {
 
     expect(response.payload).toContain('Rural Payments Agency')
   })
+
+  test('should pre-fill the form from a lookup address without validating it', async () => {
+    mockGetPersonalDetails.mockResolvedValue({
+      ...validPersonalDetails,
+      address: { uprn: '100012345678', buildingName: 'Oak Barn', county: 'South Yorkshire', city: 'Sheffield', postalCode: 'S10 2GH', country: 'United Kingdom' }
+    })
+
+    const response = await server.inject({
+      url: '/personal-details/edit',
+      auth: { strategy: 'session', credentials }
+    })
+
+    expect(response.payload).toContain('<form')
+    expect(response.payload).toContain('value="Oak Barn"')
+    expect(response.payload).toContain('value="South Yorkshire"')
+  })
 })
 
 describe('POST /personal-details/edit', () => {

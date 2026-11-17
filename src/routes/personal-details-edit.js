@@ -4,6 +4,7 @@ import { updatePersonalDetails } from '../api/update-personal-details.js'
 import { validatePersonalDetails } from '../validation/validate-personal-details.js'
 import { formatValidationErrors } from '../validation/format-validation-errors.js'
 import { buildManualAddress } from '../validation/build-manual-address.js'
+import { formatOriginalAddress } from '../utils/format-address.js'
 import { parseDateOfBirth } from '../validation/personal/parse-date-of-birth.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
@@ -25,14 +26,7 @@ function toFormValues (personalDetails) {
     personalTelephone: personalDetails.phone?.landline ?? '',
     personalMobile: personalDetails.phone?.mobile ?? '',
     personalEmail: personalDetails.email?.address ?? '',
-    line1: personalDetails.address?.line1 ?? '',
-    line2: personalDetails.address?.line2 ?? '',
-    line3: personalDetails.address?.line3 ?? '',
-    city: personalDetails.address?.city ?? '',
-    // Manual saves write "county" into the DAL's line4 field (see buildManualAddress)
-    county: personalDetails.address?.line4 ?? '',
-    postalCode: personalDetails.address?.postalCode ?? '',
-    country: personalDetails.address?.country ?? ''
+    ...formatOriginalAddress(personalDetails.address)
   }
 }
 
@@ -68,7 +62,8 @@ const getPersonalDetailsEdit = {
     }
 
     const formValues = toFormValues(personalDetails)
-    const { isValid } = validatePersonalDetails(formValues)
+    // The manual address rules don't apply to a lookup address (one with a UPRN)
+    const { isValid } = validatePersonalDetails(formValues, { includeAddress: !personalDetails.address?.uprn })
 
     // Stored data the form would reject can't be saved back without the user changing fields they didn't touch
     if (!isValid) {

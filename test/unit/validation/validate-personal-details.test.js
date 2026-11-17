@@ -72,4 +72,9 @@ describe('validatePersonalDetails', () => {
     expect(isValid).toBe(false)
     expect(errors.some((error) => error.path[0] === 'line1')).toBe(true)
   })
+
+  test('should skip the address when includeAddress is false', () => {
+    const { isValid } = validatePersonalDetails({ ...validPayload, line1: '' }, { includeAddress: false })
+    expect(isValid).toBe(true)
+  })
 })
