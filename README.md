@@ -820,10 +820,6 @@ has no postcode lookup and never sends a `uprn`. That has two consequences:
   if it was entered manually. An address chosen from a postcode lookup was never held to
   those rules, so the form is shown anyway and the user can correct it before saving.
 
-The external API's [Addresses](https://github.com/DEFRA/fcp-tp-external-api#addresses)
-section explains how these fields are stored behind the scenes. You don't need it to
-integrate.
-
 ### Validating input
 
 Validation lives in `src/validation/`, with one Joi schema per part of the form (name,
