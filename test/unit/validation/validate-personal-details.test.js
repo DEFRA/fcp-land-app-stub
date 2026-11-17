@@ -10,12 +10,12 @@ const validPayload = {
   personalTelephone: '01144960123',
   personalMobile: '',
   personalEmail: 'james.henderson@example.com',
-  line1: '14 Oakwood Drive',
+  line1: '14 Example Drive',
   line2: '',
   line3: '',
-  city: 'Sheffield',
+  city: 'Exampletown',
   county: '',
-  postalCode: 'S10 2GH',
+  postalCode: 'AB1 2CD',
   country: 'United Kingdom'
 }
 

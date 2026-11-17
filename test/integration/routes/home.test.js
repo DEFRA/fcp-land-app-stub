@@ -34,7 +34,7 @@ const personalDetails = {
   crn: credentials.crn,
   name: { first: 'Andrew', middle: null, last: 'Farmer' },
   dateOfBirth: '1980-01-01',
-  address: { line1: '14 Oakwood Drive', postalCode: 'S10 2GH' },
+  address: { line1: '14 Example Drive', postalCode: 'AB1 2CD' },
   email: { address: 'andrew.farmer@example.com' },
   phone: { landline: '01144960123', mobile: '07771234567' }
 }
@@ -49,7 +49,7 @@ const businessDetails = {
   vendorNumber: '694523',
   legalStatus: { code: '102111', type: 'Sole Proprietorship' },
   type: { code: '101443', type: 'Central Government' },
-  address: { line1: '1 Farm Lane', postalCode: 'AB1 2CD' },
+  address: { line1: '1 Example Lane', postalCode: 'AB1 2CD' },
   email: { address: 'contact@farmsltd.example.com' },
   phone: { landline: '01144960124', mobile: '07771234568' }
 }
@@ -116,15 +116,15 @@ describe('GET /home', () => {
   test('should display a lookup address from its lookup fields rather than its lines', async () => {
     mockGetBusinessDetails.mockResolvedValue({
       ...businessDetails,
-      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Farm Lane', line4: 'IG1 1NO', city: 'Sheffield', postalCode: 'AB1 2CD' }
+      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Example Lane', line4: 'ZZ9 9ZZ', city: 'Exampletown', postalCode: 'AB1 2CD' }
     })
 
     const response = await server.inject({
       url: '/home',
       auth: { strategy: 'session', credentials }
     })
-    expect(response.payload).toContain('1 Farm Lane<br>Sheffield<br>AB1 2CD<br>')
-    expect(response.payload).not.toContain('IG1 1NO')
+    expect(response.payload).toContain('1 Example Lane<br>Exampletown<br>AB1 2CD<br>')
+    expect(response.payload).not.toContain('ZZ9 9ZZ')
   })
 
   test('should show a permission notice instead of business details when the user lacks business scope', async () => {

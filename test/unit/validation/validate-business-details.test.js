@@ -6,10 +6,10 @@ const validPayload = {
   businessMobile: '',
   businessEmail: 'contact@hendersonfamilyfarms.example.com',
   vatNumber: '123456789',
-  line1: '1 Farm Lane',
+  line1: '1 Example Lane',
   line2: '',
   line3: '',
-  city: 'Sheffield',
+  city: 'Exampletown',
   county: '',
   postalCode: 'AB1 2CD',
   country: 'United Kingdom'

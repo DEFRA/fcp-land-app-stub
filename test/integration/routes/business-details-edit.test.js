@@ -43,11 +43,11 @@ const validBusinessDetails = {
   name: 'Farms Ltd',
   vat: '987654321',
   address: {
-    line1: '1 Farm Lane',
+    line1: '1 Example Lane',
     line2: null,
     line3: null,
     line4: null,
-    city: 'Sheffield',
+    city: 'Exampletown',
     postalCode: 'AB1 2CD',
     country: 'United Kingdom'
   },
@@ -61,10 +61,10 @@ const validPayload = {
   businessMobile: '07771234568',
   businessEmail: 'contact@farmsltd.example.com',
   vatNumber: '987654321',
-  line1: '1 Farm Lane',
+  line1: '1 Example Lane',
   line2: '',
   line3: '',
-  city: 'Sheffield',
+  city: 'Exampletown',
   county: '',
   postalCode: 'AB1 2CD',
   country: 'United Kingdom'
@@ -130,7 +130,7 @@ describe('GET /business-details/edit', () => {
   test('should pre-fill the form from a lookup address without validating it', async () => {
     mockGetBusinessDetails.mockResolvedValue({
       ...validBusinessDetails,
-      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Farm Lane', city: 'Sheffield', postalCode: 'AB1 2CD', country: 'United Kingdom' }
+      address: { uprn: '100012345678', buildingNumberRange: '1', street: 'Example Lane', city: 'Exampletown', postalCode: 'AB1 2CD', country: 'United Kingdom' }
     })
 
     const response = await server.inject({
@@ -139,7 +139,7 @@ describe('GET /business-details/edit', () => {
     })
 
     expect(response.payload).toContain('<form')
-    expect(response.payload).toContain('value="1 Farm Lane"')
+    expect(response.payload).toContain('value="1 Example Lane"')
   })
 })
 
@@ -188,7 +188,7 @@ describe('POST /business-details/edit', () => {
     const [input] = mockUpdateBusinessDetails.mock.calls[0]
     expect(input.sbi).toBe(credentials.sbi)
     expect(input.name).toBe('Farms Ltd')
-    expect(input.address.withoutUprn.line1).toBe('1 Farm Lane')
+    expect(input.address.withoutUprn.line1).toBe('1 Example Lane')
   })
 
   test('should show an error notice when the update fails', async () => {
